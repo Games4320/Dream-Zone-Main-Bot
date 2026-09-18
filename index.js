@@ -39,7 +39,8 @@ const TICKET_CATEGORIES = [
   { id: 'complaint_member', label: 'תלונה על ממבר', allowedRoles: [staffRoleId, highStaffRoleId] },
   { id: 'general_question', label: 'שאלה כללית', allowedRoles: [staffRoleId, highStaffRoleId] },
   { id: 'other', label: 'אחר', allowedRoles: [staffRoleId, highStaffRoleId] },
-  { id: 'management_appeal', label: 'פנייה להנהלה', allowedRoles: [MANAGEMENT_ROLE_ID] }
+  { id: 'management_appeal', label: 'פנייה להנהלה', allowedRoles: [MANAGEMENT_ROLE_ID] },
+  { id: 'staff_exam', label: 'בחינות לצוות', allowedRoles: [SPECIALIST_ROLE_ID] }
 ];
 
 const SHOP_ROLES = [
@@ -347,6 +348,11 @@ client.once(Events.ClientReady, async () => {
       new SlashCommandBuilder()
         .setName('staffappsend')
         .setDescription('שלח את טופס ההגשה לצוות')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('examsend')
+        .setDescription('שלח את כפתור פתיחת בחינה לצוות')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
@@ -995,6 +1001,54 @@ client.on(Events.InteractionCreate, async interaction => {
       }
       return;
     }
+
+    if (interaction.commandName === 'examsend') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const embedExam = new EmbedBuilder()
+          .setColor(0x9400D3)
+          .setTitle('🧪 בחינה לצוות')
+          .setDescription('**לחץ על הכפתור כדי לפתוח בחינה חדשה**')
+          .addFields(
+            { name: 'הערה', value: 'בחינה זו משמשת רק למועמדים לצוות. רק רול Specialist יכול לראות חנות זו.', inline: false }
+          );
+
+        const examButton = new ButtonBuilder()
+          .setCustomId('exam_start')
+          .setLabel('🧪 פתח בחינה')
+          .setStyle('Primary');
+
+        const row = new ActionRowBuilder().addComponents(examButton);
+
+        // Send to ticket setup channel
+        const examChannel = await client.channels.fetch(TICKET_SETUP_CHANNEL_ID);
+        
+        // Delete old exam messages
+        const messages = await examChannel.messages.fetch({ limit: 10 });
+        for (const message of messages.values()) {
+          if (message.author.id === client.user.id && message.embeds.some(e => e.title?.includes('בחינה'))) {
+            await message.delete().catch(() => {});
+          }
+        }
+
+        await examChannel.send({
+          embeds: [embedExam],
+          components: [row]
+        });
+
+        await interaction.editReply({ content: '✅ כפתור הבחינה נשלח בהצלחה!' });
+      } catch (err) {
+        console.error('Error in examsend command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
   }
 
   if (interaction.isStringSelectMenu()) {
@@ -1389,6 +1443,55 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (err) {
       console.error('Failed to close ticket:', err);
       await interaction.editReply({ content: '❌ אירעה שגיאה בעת סגירת הטיקט.' }).catch(() => {});
+    }
+    return;
+  }
+
+  // Exam close button
+  if (customId.startsWith('exam_close_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    const channelId = customId.replace('exam_close_', '');
+    const channel = client.channels.cache.get(channelId);
+    const ticketData = openTickets.get(channelId);
+
+    if (!ticketData) {
+      await interaction.editReply({ content: '❌ לא נמצאה בחינה זו.' });
+      return;
+    }
+
+    // Only the person who created the exam or Specialist can close it
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const isCreator = ticketData.createdBy === interaction.user.id;
+    const hasSpecialist = member.roles.cache.has(SPECIALIST_ROLE_ID);
+
+    if (!isCreator && !hasSpecialist) {
+      await interaction.editReply({ content: '❌ רק הנבחן או Specialist יכולים לסגור בחינה!' });
+      return;
+    }
+
+    try {
+      await interaction.editReply({ content: '✅ בחינה סגורה בהצלחה! הערוץ יימחק בעוד 5 שניות...' });
+      
+      setTimeout(async () => {
+        try {
+          await channel.delete();
+          openTickets.delete(channelId);
+          console.log(`✅ Exam ${channelId} closed and deleted`);
+          
+          // Log exam closed
+          await sendLog(
+            '🧪 בחינה סגורה',
+            `**סגור על ידי:** <@${interaction.user.id}>\n**נבחן:** <@${ticketData.createdBy}>\n**ID:** ${channelId}`,
+            0x9400D3
+          );
+        } catch (err) {
+          console.error('Failed to delete exam channel:', err);
+        }
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to close exam:', err);
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת סגירת הבחינה.' }).catch(() => {});
     }
     return;
   }
@@ -1817,6 +1920,142 @@ client.on(Events.InteractionCreate, async interaction => {
     );
 
     await interaction.showModal(modal);
+    return;
+  }
+
+  // Exam start button
+  if (customId === 'exam_start') {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    try {
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      
+      // Check if user has Specialist role (1541492934376165400)
+      if (!member.roles.cache.has(SPECIALIST_ROLE_ID)) {
+        await interaction.editReply({ content: '❌ רק רול Specialist יכול לפתוח בחינה!' });
+        return;
+      }
+
+      // Check if user already has an open exam ticket
+      const existingTicket = Array.from(openTickets.values()).find(
+        ticket => ticket.createdBy === interaction.user.id && ticket.category === 'staff_exam'
+      );
+
+      if (existingTicket) {
+        const ticketChannel = client.channels.cache.get(existingTicket.channelId);
+        if (ticketChannel) {
+          await interaction.editReply({ content: `✅ כבר יש לך בחינה פתוחה: <#${existingTicket.channelId}>` });
+          return;
+        }
+      }
+
+      // Get or create exam category
+      const guild = interaction.guild;
+      let examCategoryId = null;
+      
+      let examCategory = guild.channels.cache.find(c => 
+        c.isCategory() && c.name.toLowerCase().includes('בחינה')
+      );
+
+      if (!examCategory) {
+        examCategory = await guild.channels.create({
+          name: '🧪 בחינות לצוות',
+          type: ChannelType.GuildCategory,
+          permissionOverwrites: [
+            {
+              id: guild.id,
+              deny: ['ViewChannel']
+            },
+            {
+              id: SPECIALIST_ROLE_ID,
+              allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+            }
+          ]
+        });
+      }
+
+      examCategoryId = examCategory.id;
+
+      // Create exam ticket channel
+      const ticketChannel = await guild.channels.create({
+        name: `exam-${interaction.user.username}`,
+        type: ChannelType.GuildText,
+        parent: examCategoryId,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: ['ViewChannel']
+          },
+          {
+            id: interaction.user.id,
+            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+          },
+          {
+            id: SPECIALIST_ROLE_ID,
+            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+          }
+        ]
+      });
+
+      // Create ticket info embed
+      const examEmbed = new EmbedBuilder()
+        .setColor(0x9400D3)
+        .setTitle('🧪 בחינה לצוות')
+        .setDescription(`**בחינה של:** <@${interaction.user.id}>`)
+        .addFields(
+          { name: 'הנושאים:', value: '1. ידע בצוות\n2. יכולת ניהול\n3. התנהגות חברתית\n4. טיפול במקרים\n5. ידע בחוקים', inline: false },
+          { name: 'הוראות:', value: 'יש למענה מדויק וברור. יתן לך מנהל לענות על שאלות. עונה על הכל בחוקים ובנימוסים.', inline: false }
+        )
+        .setTimestamp();
+
+      const closeButton = new ButtonBuilder()
+        .setCustomId(`exam_close_${ticketChannel.id}`)
+        .setLabel('סגור בחינה')
+        .setStyle('Danger');
+
+      const row = new ActionRowBuilder().addComponents(closeButton);
+
+      await ticketChannel.send({
+        embeds: [examEmbed],
+        components: [row]
+      });
+
+      // Send exam questions
+      const questionsEmbed = new EmbedBuilder()
+        .setColor(0x9400D3)
+        .setTitle('📝 שאלות הבחינה')
+        .addFields(
+          { name: 'שאלה 1', value: 'מה לדעתך הם הדברים החשובים ביותר של staff member?', inline: false },
+          { name: 'שאלה 2', value: 'כיצד היית מטפל ב user שמפר חוקי השרת?', inline: false },
+          { name: 'שאלה 3', value: 'מה המוטיבציה שלך להיות staff?', inline: false },
+          { name: 'שאלה 4', value: 'תן דוגמה לכך שטיפלת בכללים בעבר', inline: false },
+          { name: 'שאלה 5', value: 'כמה זמן אתה יכול להיות online ביום?', inline: false }
+        );
+
+      await ticketChannel.send({ embeds: [questionsEmbed] });
+
+      // Store ticket info
+      const ticketData = {
+        channelId: ticketChannel.id,
+        createdBy: interaction.user.id,
+        category: 'staff_exam',
+        createdAt: Date.now(),
+        claimed: false
+      };
+      openTickets.set(ticketChannel.id, ticketData);
+
+      await interaction.editReply({ content: `✅ בחינה נפתחה בהצלחה ב <#${ticketChannel.id}>` });
+
+      // Log
+      await sendLog(
+        '🧪 בחינה נפתחה',
+        `**משתמש:** <@${interaction.user.id}>\n**ערוץ:** <#${ticketChannel.id}>`,
+        0x9400D3
+      );
+    } catch (err) {
+      console.error('Error in exam_start:', err);
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת פתיחת הבחינה.' });
+    }
     return;
   }
 
