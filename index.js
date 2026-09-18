@@ -71,6 +71,7 @@ const ageCheckClaims = new Map(); // Track age check claims
 const messageTimestamps = new Map(); // Track messages per user for spam detection
 const userWarnings = new Map(); // Track warnings per user
 const userMutes = new Map(); // Track active mutes
+const activeGiveaways = new Map(); // Track active giveaways
 let ticketCategoryId = null;
 let autoRoleId = null; // Store the auto-role ID
 
@@ -120,6 +121,74 @@ async function sendPunishmentDM(user, punishmentType, reason, duration) {
     await user.send({ embeds: [dmEmbed] });
   } catch (err) {
     console.error('Failed to send punishment DM:', err);
+  }
+}
+
+// Helper function to end giveaway
+async function endGiveaway(giveawayId, guild) {
+  const giveaway = activeGiveaways.get(giveawayId);
+  if (!giveaway) return;
+
+  try {
+    const channel = await guild.channels.fetch(giveaway.channelId);
+    const message = await channel.messages.fetch(giveaway.messageId);
+
+    const participants = Array.from(giveaway.participants);
+    let winners = [];
+
+    if (participants.length > 0) {
+      const winnerCount = Math.min(giveaway.winners, participants.length);
+      for (let i = 0; i < winnerCount; i++) {
+        const randomIndex = Math.floor(Math.random() * participants.length);
+        winners.push(participants[randomIndex]);
+        participants.splice(randomIndex, 1);
+      }
+    }
+
+    const winnersText = winners.length > 0 
+      ? winners.map(id => `<@${id}>`).join(', ')
+      : 'לא היה זוכה';
+
+    const endEmbed = new EmbedBuilder()
+      .setColor(0x00FF00)
+      .setTitle('🎊 הגרלה סיימה!')
+      .addFields(
+        { name: 'פרס', value: giveaway.prize, inline: false },
+        { name: 'זוכים', value: winnersText, inline: false },
+        { name: 'סך הכל משתתפים', value: giveaway.participants.size.toString(), inline: true }
+      )
+      .setTimestamp();
+
+    // Disable button
+    const disabledRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`giveaway_join_${giveawayId}`)
+        .setLabel('🎊 הגרלה סיימה')
+        .setStyle('Secondary')
+        .setDisabled(true)
+    );
+
+    await message.edit({
+      embeds: [endEmbed],
+      components: [disabledRow]
+    });
+
+    if (winners.length > 0) {
+      await channel.send({
+        content: `🎉 **ברכות!** ${winners.map(id => `<@${id}>`).join(', ')} - ניצחתם את ההגרלה על ${giveaway.prize}!`,
+        allowedMentions: { parse: ['users'] }
+      });
+    }
+
+    await sendLog(
+      '🎊 הגרלה סיימה',
+      `**פרס:** ${giveaway.prize}\n**זוכים:** ${winnersText}\n**סך הכל משתתפים:** ${giveaway.participants.size}`,
+      0x00FF00
+    );
+
+    activeGiveaways.delete(giveawayId);
+  } catch (err) {
+    console.error('Failed to end giveaway:', err);
   }
 }
 
@@ -240,6 +309,38 @@ client.once(Events.ClientReady, async () => {
         .addStringOption(option =>
           option.setName('reason')
             .setDescription('סיבת ההשתקה')
+            .setRequired(true)
+        )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('giveaway')
+        .setDescription('צור הגרלה')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addStringOption(option =>
+          option.setName('prize')
+            .setDescription('פרס ההגרלה')
+            .setRequired(true)
+        )
+        .addIntegerOption(option =>
+          option.setName('duration')
+            .setDescription('משך ההגרלה בדקות')
+            .setRequired(true)
+            .setMinValue(1)
+        )
+        .addIntegerOption(option =>
+          option.setName('winners')
+            .setDescription('מספר הזוכים')
+            .setRequired(true)
+            .setMinValue(1)
+        )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('endgiveaway')
+        .setDescription('סיים הגרלה')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addStringOption(option =>
+          option.setName('giveaway_id')
+            .setDescription('ID של ההגרלה')
             .setRequired(true)
         )
         .toJSON()
@@ -744,6 +845,98 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.editReply({ content: `✅ <@${targetUser.id}> הושתק מערוצים!` });
       } catch (err) {
         console.error('Error in chmute command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'giveaway') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({ content: 'רק אדמינים יכולים ליצור הגרלות.' });
+          return;
+        }
+
+        const prize = interaction.options.getString('prize');
+        const duration = interaction.options.getInteger('duration');
+        const winners = interaction.options.getInteger('winners');
+        const giveawayId = `giveaway_${Date.now()}`;
+
+        const giveawayEmbed = new EmbedBuilder()
+          .setColor(0xFFD700)
+          .setTitle('🎉 הגרלה חדשה!')
+          .addFields(
+            { name: 'פרס', value: prize, inline: false },
+            { name: 'מספר זוכים', value: winners.toString(), inline: true },
+            { name: 'משך ההגרלה', value: `${duration} דקות`, inline: true },
+            { name: 'לחץ 🎊 כדי להשתתף', value: 'חד פעם בלבד', inline: false }
+          )
+          .setFooter({ text: `ID: ${giveawayId}` })
+          .setTimestamp(Date.now() + duration * 60 * 1000);
+
+        const reactionButton = new ButtonBuilder()
+          .setCustomId(`giveaway_join_${giveawayId}`)
+          .setLabel('🎊 השתתף')
+          .setStyle('Primary');
+
+        const row = new ActionRowBuilder().addComponents(reactionButton);
+
+        const giveawayMessage = await interaction.channel.send({
+          embeds: [giveawayEmbed],
+          components: [row]
+        });
+
+        activeGiveaways.set(giveawayId, {
+          messageId: giveawayMessage.id,
+          channelId: interaction.channelId,
+          prize: prize,
+          winners: winners,
+          participants: new Set(),
+          endTime: Date.now() + duration * 60 * 1000,
+          createdBy: interaction.user.id
+        });
+
+        await sendLog(
+          '🎉 הגרלה חדשה',
+          `**פרס:** ${prize}\n**מספר זוכים:** ${winners}\n**משך:** ${duration} דקות\n**יוצר:** <@${interaction.user.id}>`,
+          0xFFD700
+        );
+
+        await interaction.editReply({ content: `✅ הגרלה יצורה בהצלחה! (ID: ${giveawayId})` });
+
+        // End giveaway after duration
+        setTimeout(async () => {
+          await endGiveaway(giveawayId, interaction.guild);
+        }, duration * 60 * 1000);
+      } catch (err) {
+        console.error('Error in giveaway command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'endgiveaway') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({ content: 'רק אדמינים יכולים לסיים הגרלות.' });
+          return;
+        }
+
+        const giveawayId = interaction.options.getString('giveaway_id');
+
+        if (!activeGiveaways.has(giveawayId)) {
+          await interaction.editReply({ content: '❌ הגרלה זו לא קיימת.' });
+          return;
+        }
+
+        await endGiveaway(giveawayId, interaction.guild);
+        await interaction.editReply({ content: `✅ הגרלה ${giveawayId} סיימה!` });
+      } catch (err) {
+        console.error('Error in endgiveaway command:', err);
         await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
@@ -1291,6 +1484,30 @@ client.on(Events.InteractionCreate, async interaction => {
 
     const row = new ActionRowBuilder().addComponents(refundMenu);
     await interaction.editReply({ components: [row] });
+    return;
+  }
+
+
+  // Giveaway join button
+  if (customId.startsWith('giveaway_join_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    const giveawayId = customId.replace('giveaway_join_', '');
+    const giveaway = activeGiveaways.get(giveawayId);
+
+    if (!giveaway) {
+      await interaction.editReply({ content: '❌ הגרלה זו לא קיימת או סיימה.' }).catch(() => {});
+      return;
+    }
+
+    if (giveaway.participants.has(interaction.user.id)) {
+      await interaction.editReply({ content: '❌ אתה כבר במשתתפים!' }).catch(() => {});
+      return;
+    }
+
+    giveaway.participants.add(interaction.user.id);
+
+    await interaction.editReply({ content: `✅ נוספת להגרלה! (${giveaway.participants.size} משתתפים)` }).catch(() => {});
     return;
   }
 
