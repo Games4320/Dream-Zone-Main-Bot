@@ -23,6 +23,7 @@ const TICKET_SETUP_CHANNEL_ID = '1549855124237590690';
 const VETERAN_CHANNEL_ID = '1541492936724971558';
 const LOGS_CHANNEL_ID = '1541492941795889301';
 const AGE_CHECK_ROLE_ID = '1550414404531654727';
+const STAFF_APP_CHANNEL_ID = '1550459563730276453';
 const COOLDOWN_DURATION = 30 * 1000;
 const XP_PER_MESSAGE = 2;
 const XP_PER_VOICE_MINUTE = 4;
@@ -342,6 +343,11 @@ client.once(Events.ClientReady, async () => {
             .setDescription('ID של ההגרלה')
             .setRequired(true)
         )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('staffappsend')
+        .setDescription('שלח את טופס ההגשה לצוות')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
 
@@ -940,6 +946,55 @@ client.on(Events.InteractionCreate, async interaction => {
       }
       return;
     }
+
+    if (interaction.commandName === 'staffappsend') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const channel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
+
+        // Delete old messages
+        const messages = await channel.messages.fetch({ limit: 10 });
+        for (const message of messages.values()) {
+          if (message.author.id === client.user.id) {
+            await message.delete().catch(() => {});
+          }
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor(0xFF6B00)
+          .setTitle('# טפסים לצוות זמינים!')
+          .setDescription('**תגישו טופס! ואולי תתקבלו!**')
+          .addFields(
+            { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
+            { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
+            { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על הכפתור למטה!', inline: false }
+          );
+
+        const appButton = new ButtonBuilder()
+          .setCustomId('staffapp_start')
+          .setLabel('🔵 התחל בחינה')
+          .setStyle('Primary');
+
+        const row = new ActionRowBuilder().addComponents(appButton);
+
+        await channel.send({
+          embeds: [embed],
+          components: [row]
+        });
+
+        await interaction.editReply({ content: '✅ טופס הגשה לצוות נשלח בהצלחה!' });
+      } catch (err) {
+        console.error('Error in staffappsend command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
   }
 
   if (interaction.isStringSelectMenu()) {
@@ -1447,6 +1502,64 @@ client.on(Events.InteractionCreate, async interaction => {
     return;
   }
 
+  // Staff application submission
+  if (customId === 'staffapp_modal') {
+    try {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+      const name = interaction.fields.getTextInputValue('staffapp_name');
+      const age = interaction.fields.getTextInputValue('staffapp_age');
+      const experience = interaction.fields.getTextInputValue('staffapp_experience');
+      const why = interaction.fields.getTextInputValue('staffapp_why');
+      const availability = interaction.fields.getTextInputValue('staffapp_availability');
+
+      const appEmbed = new EmbedBuilder()
+        .setColor(0xFF6B00)
+        .setTitle('📋 בקשה חדשה לצוות')
+        .addFields(
+          { name: 'שם', value: name, inline: false },
+          { name: 'גיל', value: age, inline: true },
+          { name: 'זמינות יומית', value: availability, inline: true },
+          { name: 'ניסיון', value: experience, inline: false },
+          { name: 'למה אתה רוצה להיות צוות?', value: why, inline: false },
+          { name: 'משתמש', value: `<@${interaction.user.id}>`, inline: false }
+        )
+        .setFooter({ text: `ID: ${interaction.user.id}` })
+        .setTimestamp();
+
+      const approveButton = new ButtonBuilder()
+        .setCustomId(`staffapp_approve_${interaction.user.id}`)
+        .setLabel('✅ אישור')
+        .setStyle('Success');
+
+      const rejectButton = new ButtonBuilder()
+        .setCustomId(`staffapp_reject_${interaction.user.id}`)
+        .setLabel('❌ דחייה')
+        .setStyle('Danger');
+
+      const row = new ActionRowBuilder().addComponents(approveButton, rejectButton);
+
+      // Send to logs channel
+      const logsChannel = await client.channels.fetch(LOGS_CHANNEL_ID);
+      await logsChannel.send({
+        embeds: [appEmbed],
+        components: [row]
+      });
+
+      await sendLog(
+        '📋 בקשה חדשה לצוות',
+        `**משתמש:** <@${interaction.user.id}>\n**שם:** ${name}\n**גיל:** ${age}\n**זמינות:** ${availability}`,
+        0xFF6B00
+      );
+
+      await interaction.editReply({ content: '✅ הטופס נשלח בהצלחה! המנהלים יבדקו את הבקשה שלך.' }).catch(() => {});
+    } catch (err) {
+      console.error('Error in staffapp submission:', err);
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת שליחת הטופס.' }).catch(() => {});
+    }
+    return;
+  }
+
   // Shop button interactions
   if (customId === 'shop_open_buy') {
     await interaction.deferReply({ ephemeral: true }).catch(() => {});
@@ -1507,6 +1620,203 @@ client.on(Events.InteractionCreate, async interaction => {
     giveaway.participants.add(interaction.user.id);
 
     await interaction.editReply({ content: `✅ נוספת להגרלה! (${giveaway.participants.size} משתתפים)` }).catch(() => {});
+    return;
+  }
+
+  // Staff application approve
+  if (customId.startsWith('staffapp_approve_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    try {
+      const userId = customId.replace('staffapp_approve_', '');
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      
+      // Only staff and high staff can approve
+      const hasStaffRole = member.roles.cache.has(staffRoleId);
+      const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+
+      if (!hasStaffRole && !hasHighStaffRole) {
+        await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לאשר בקשות!' });
+        return;
+      }
+
+      // Get the applicant
+      const applicant = await interaction.guild.members.fetch(userId).catch(() => null);
+      if (!applicant) {
+        await interaction.editReply({ content: '❌ לא ניתן למצוא את המשתמש.' });
+        return;
+      }
+
+      // Give staff role
+      await applicant.roles.add(staffRoleId).catch((err) => {
+        console.error('Failed to add staff role:', err);
+      });
+
+      // Send DM to applicant
+      try {
+        await applicant.user.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0x00FF00)
+              .setTitle('✅ בקשתך לצוות אושרה!')
+              .setDescription(`ברוכים הבאים לצוות Superme!\nתקבלת את ה Staff Role.`)
+              .setTimestamp()
+          ]
+        });
+      } catch (err) {
+        console.log('Could not send DM to applicant');
+      }
+
+      // Disable the buttons
+      const updatedRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`staffapp_approve_${userId}`)
+          .setLabel('✅ אישור')
+          .setStyle('Success')
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId(`staffapp_reject_${userId}`)
+          .setLabel('❌ דחייה')
+          .setStyle('Danger')
+          .setDisabled(true)
+      );
+
+      // Update the message
+      await interaction.message.edit({ components: [updatedRow] }).catch(() => {});
+
+      // Log the approval
+      await sendLog(
+        '✅ בקשת צוות אושרה',
+        `**משתמש:** <@${userId}>\n**אושר על ידי:** <@${interaction.user.id}>`,
+        0x00FF00
+      );
+
+      await interaction.editReply({ content: `✅ בקשת צוות של <@${userId}> אושרה בהצלחה!` });
+    } catch (err) {
+      console.error('Error in staffapp approval:', err);
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת אישור הבקשה.' });
+    }
+    return;
+  }
+
+  // Staff application reject
+  if (customId.startsWith('staffapp_reject_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    try {
+      const userId = customId.replace('staffapp_reject_', '');
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      
+      // Only staff and high staff can reject
+      const hasStaffRole = member.roles.cache.has(staffRoleId);
+      const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+
+      if (!hasStaffRole && !hasHighStaffRole) {
+        await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לדחות בקשות!' });
+        return;
+      }
+
+      // Get the applicant
+      const applicant = await interaction.guild.members.fetch(userId).catch(() => null);
+      if (!applicant) {
+        await interaction.editReply({ content: '❌ לא ניתן למצוא את המשתמש.' });
+        return;
+      }
+
+      // Send DM to applicant
+      try {
+        await applicant.user.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0xFF0000)
+              .setTitle('❌ בקשתך לצוות נדחתה')
+              .setDescription(`קבלנו את הבקשה שלך, אך, לאחר בדיקה, החלטנו לא לקבל אותך לצוות בשלב זה.\nתוכל להגיש בקשה חדשה בעתיד.`)
+              .setTimestamp()
+          ]
+        });
+      } catch (err) {
+        console.log('Could not send DM to applicant');
+      }
+
+      // Disable the buttons
+      const updatedRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`staffapp_approve_${userId}`)
+          .setLabel('✅ אישור')
+          .setStyle('Success')
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId(`staffapp_reject_${userId}`)
+          .setLabel('❌ דחייה')
+          .setStyle('Danger')
+          .setDisabled(true)
+      );
+
+      // Update the message
+      await interaction.message.edit({ components: [updatedRow] }).catch(() => {});
+
+      // Log the rejection
+      await sendLog(
+        '❌ בקשת צוות נדחתה',
+        `**משתמש:** <@${userId}>\n**נדחה על ידי:** <@${interaction.user.id}>`,
+        0xFF0000
+      );
+
+      await interaction.editReply({ content: `❌ בקשת צוות של <@${userId}> נדחתה.` });
+    } catch (err) {
+      console.error('Error in staffapp rejection:', err);
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת דחיית הבקשה.' });
+    }
+    return;
+  }
+
+  // Staff application start
+  if (customId === 'staffapp_start') {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    const modal = new ModalBuilder()
+      .setCustomId('staffapp_modal')
+      .setTitle('טופס הגשה לצוות');
+
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('staffapp_name')
+          .setLabel('איך קוראים לך?')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('staffapp_age')
+          .setLabel('בן כמה אתה?')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('staffapp_experience')
+          .setLabel('מה הניסיון שלך כצוות?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('staffapp_why')
+          .setLabel('למה אתה רוצה להיות צוות?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId('staffapp_availability')
+          .setLabel('כמה שעות ביום אתה יכול להיות פעיל?')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+      )
+    );
+
+    await interaction.showModal(modal);
     return;
   }
 
