@@ -411,8 +411,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (interaction.commandName === 'setautoroll') {
       try {
+        await interaction.deferReply({ ephemeral: true });
+
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.', ephemeral: true });
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -426,10 +428,10 @@ client.on(Events.InteractionCreate, async interaction => {
           0x3498DB
         );
 
-        await interaction.reply({ content: `✅ רול אוטומטי הוגדר ל- <@&${role.id}>! כל משתמש שנכנס יקבל אותו.`, ephemeral: true });
+        await interaction.editReply({ content: `✅ רול אוטומטי הוגדר ל- <@&${role.id}>! כל משתמש שנכנס יקבל אותו.` });
       } catch (err) {
         console.error('Error in setautoroll command:', err);
-        await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
     }
