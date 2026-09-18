@@ -1450,7 +1450,10 @@ client.on(Events.MessageCreate, async message => {
 
   // XP check command
   if (message.content.startsWith('!xp')) {
+    console.log(`🔍 !xp command detected from ${message.author.id} in channel ${message.channelId}`);
+    
     if (message.channelId !== XP_CHECK_CHANNEL_ID) {
+      console.log(`❌ Wrong channel. Expected ${XP_CHECK_CHANNEL_ID}, got ${message.channelId}`);
       await sendLog(
         '❌ פקודה בחדר לא תקין',
         `**משתמש:** <@${userId}>\n**פקודה:** !xp\n**ערוץ:** <#${message.channelId}>`,
@@ -1484,6 +1487,8 @@ client.on(Events.MessageCreate, async message => {
     const xpAmount = userXP.get(targetId) || 0;
     const user = await client.users.fetch(targetId).catch(() => null);
     const username = user ? user.username : 'Unknown User';
+
+    console.log(`✅ !xp command: ${username} has ${xpAmount} XP`);
 
     // Log XP check
     await sendLog(
