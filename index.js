@@ -1277,23 +1277,23 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
-  // Log message creation
-  await sendLog(
-    '💬 הודעה חדשה',
-    `**משתמש:** <@${message.author.id}>\n**ערוץ:** <#${message.channelId}>\n**תוכן:** ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`,
-    0x3498DB
-  );
+  const userId = message.author.id;
 
-  // XP system - message XP
-  if (message.channelId === XP_CHECK_CHANNEL_ID) {
-    // This is the XP check channel, don't give XP here
-    return;
+  // Log message creation - but skip logging for XP_CHECK_CHANNEL to avoid noise
+  if (message.channelId !== XP_CHECK_CHANNEL_ID) {
+    await sendLog(
+      '💬 הודעה חדשה',
+      `**משתמש:** <@${message.author.id}>\n**ערוץ:** <#${message.channelId}>\n**תוכן:** ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`,
+      0x3498DB
+    );
   }
 
-  const userId = message.author.id;
-  const currentXp = userXP.get(userId) || 0;
-  userXP.set(userId, currentXp + XP_PER_MESSAGE);
-  console.log(`Added ${XP_PER_MESSAGE} XP to ${userId} for message`);
+  // XP system - message XP (only give XP if not in XP_CHECK_CHANNEL)
+  if (message.channelId !== XP_CHECK_CHANNEL_ID) {
+    const currentXp = userXP.get(userId) || 0;
+    userXP.set(userId, currentXp + XP_PER_MESSAGE);
+    console.log(`Added ${XP_PER_MESSAGE} XP to ${userId} for message`);
+  }
 
   // Moderation: Spam detection
   if (!messageTimestamps.has(userId)) {
