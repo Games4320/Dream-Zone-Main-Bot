@@ -1345,11 +1345,10 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     const member = await interaction.guild.members.fetch(interaction.user.id);
-    const hasStaffRole = member.roles.cache.has(staffRoleId);
-    const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const hasSpecialistRole = member.roles.cache.has(SPECIALIST_ROLE_ID);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לטפל בבחינות!' });
+    if (!hasSpecialistRole) {
+      await interaction.editReply({ content: 'רק רול Specialist יכול לטפל בבחינות!' });
       return;
     }
 
@@ -2039,11 +2038,7 @@ client.on(Events.InteractionCreate, async interaction => {
             allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
           },
           {
-            id: staffRoleId,
-            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
-          },
-          {
-            id: highStaffRoleId,
+            id: SPECIALIST_ROLE_ID,
             allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
           }
         ]
@@ -2055,13 +2050,13 @@ client.on(Events.InteractionCreate, async interaction => {
         .setTitle('🧪 בחינה לצוות')
         .setDescription(`**בחינה של:** <@${interaction.user.id}>`)
         .addFields(
-          { name: 'הוראות:', value: 'בחינה זו פתוחה לצוות. לחץ על "טיול בחינה" כדי להתחיל לטפל בבחינה.', inline: false }
+          { name: 'הוראות:', value: 'בחינה זו פתוחה לצוות. לחץ על "טיפול בחינה" כדי להתחיל לטפל בבחינה.', inline: false }
         )
         .setTimestamp();
 
       const claimButton = new ButtonBuilder()
         .setCustomId(`exam_claim_${ticketChannel.id}`)
-        .setLabel('טיול בחינה')
+        .setLabel('טיפול בחינה')
         .setStyle('Primary');
 
       const closeButton = new ButtonBuilder()
