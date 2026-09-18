@@ -34,7 +34,6 @@ const SPECIALIST_ROLE_ID = '1541492934376165400';
 
 // Ticket categories
 const TICKET_CATEGORIES = [
-  { id: 'server_team_exam', label: 'בחינה לצוות השרת', allowedRoles: [staffRoleId, highStaffRoleId, SPECIALIST_ROLE_ID] },
   { id: 'report_staff', label: 'דיווח על איש צוות', allowedRoles: [staffRoleId, highStaffRoleId] },
   { id: 'complaint_member', label: 'תלונה על ממבר', allowedRoles: [staffRoleId, highStaffRoleId] },
   { id: 'general_question', label: 'שאלה כללית', allowedRoles: [staffRoleId, highStaffRoleId] },
