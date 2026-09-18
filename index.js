@@ -1332,6 +1332,71 @@ client.on(Events.InteractionCreate, async interaction => {
     return;
   }
 
+  // Exam claim button
+  if (customId.startsWith('exam_claim_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
+    const channelId = customId.replace('exam_claim_', '');
+    const ticketData = openTickets.get(channelId);
+
+    if (!ticketData) {
+      await interaction.editReply({ content: 'הבחינה לא קיימת עוד.' });
+      return;
+    }
+
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const hasStaffRole = member.roles.cache.has(staffRoleId);
+    const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+
+    if (!hasStaffRole && !hasHighStaffRole) {
+      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לטפל בבחינות!' });
+      return;
+    }
+
+    if (ticketData.claimed) {
+      await interaction.editReply({ content: `הבחינה כבר נטויל על ידי <@${ticketData.claimedBy}>.` });
+      return;
+    }
+
+    ticketData.claimed = true;
+    ticketData.claimedBy = interaction.user.id;
+
+    const channel = client.channels.cache.get(channelId);
+    if (channel) {
+      try {
+        const messages = await channel.messages.fetch({ limit: 1 });
+        const message = messages.first();
+        if (message && message.components.length > 0) {
+          const newClaimButton = new ButtonBuilder()
+            .setCustomId(`exam_claim_${channelId}`)
+            .setLabel(`נטויל על ידי ${interaction.user.username}`)
+            .setStyle('Secondary')
+            .setDisabled(true);
+
+          const closeButton = new ButtonBuilder()
+            .setCustomId(`exam_close_${channelId}`)
+            .setLabel('סגור בחינה')
+            .setStyle('Danger');
+
+          const newRow = new ActionRowBuilder().addComponents(newClaimButton, closeButton);
+          await message.edit({ components: [newRow] });
+        }
+      } catch (err) {
+        console.error('Failed to update exam:', err);
+      }
+    }
+
+    await interaction.editReply({ content: `✅ בחינה נטויל בהצלחה!` });
+    
+    // Log exam claim
+    await sendLog(
+      '🧪 בחינה נטויל',
+      `**נטויל על ידי:** <@${interaction.user.id}>\n**בחינה:** <#${channelId}>`,
+      0x9400D3
+    );
+    return;
+  }
+
   if (customId.startsWith('ticket_add_user_')) {
     await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
@@ -1937,7 +2002,7 @@ client.on(Events.InteractionCreate, async interaction => {
       let examCategoryId = null;
       
       let examCategory = guild.channels.cache.find(c => 
-        c.type === ChannelType.GuildCategory && c.name.toLowerCase().includes('בחינה')
+        c.type === ChannelType.GuildCategory && c.name === '🧪 בחינות לצוות'
       );
 
       if (!examCategory) {
@@ -1990,36 +2055,26 @@ client.on(Events.InteractionCreate, async interaction => {
         .setTitle('🧪 בחינה לצוות')
         .setDescription(`**בחינה של:** <@${interaction.user.id}>`)
         .addFields(
-          { name: 'הנושאים:', value: '1. ידע בצוות\n2. יכולת ניהול\n3. התנהגות חברתית\n4. טיפול במקרים\n5. ידע בחוקים', inline: false },
-          { name: 'הוראות:', value: 'יש למענה מדויק וברור. יתן לך מנהל לענות על שאלות. עונה על הכל בחוקים ובנימוסים.', inline: false }
+          { name: 'הוראות:', value: 'בחינה זו פתוחה לצוות. לחץ על "טיול בחינה" כדי להתחיל לטפל בבחינה.', inline: false }
         )
         .setTimestamp();
+
+      const claimButton = new ButtonBuilder()
+        .setCustomId(`exam_claim_${ticketChannel.id}`)
+        .setLabel('טיול בחינה')
+        .setStyle('Primary');
 
       const closeButton = new ButtonBuilder()
         .setCustomId(`exam_close_${ticketChannel.id}`)
         .setLabel('סגור בחינה')
         .setStyle('Danger');
 
-      const row = new ActionRowBuilder().addComponents(closeButton);
+      const row = new ActionRowBuilder().addComponents(claimButton, closeButton);
 
       await ticketChannel.send({
         embeds: [examEmbed],
         components: [row]
       });
-
-      // Send exam questions
-      const questionsEmbed = new EmbedBuilder()
-        .setColor(0x9400D3)
-        .setTitle('📝 שאלות הבחינה')
-        .addFields(
-          { name: 'שאלה 1', value: 'מה לדעתך הם הדברים החשובים ביותר של staff member?', inline: false },
-          { name: 'שאלה 2', value: 'כיצד היית מטפל ב user שמפר חוקי השרת?', inline: false },
-          { name: 'שאלה 3', value: 'מה המוטיבציה שלך להיות staff?', inline: false },
-          { name: 'שאלה 4', value: 'תן דוגמה לכך שטיפלת בכללים בעבר', inline: false },
-          { name: 'שאלה 5', value: 'כמה זמן אתה יכול להיות online ביום?', inline: false }
-        );
-
-      await ticketChannel.send({ embeds: [questionsEmbed] });
 
       // Store ticket info
       const ticketData = {
