@@ -69,6 +69,8 @@ const purchasedRoles = new Map();
 const openTickets = new Map();
 const ageCheckClaims = new Map(); // Track age check claims
 const messageTimestamps = new Map(); // Track messages per user for spam detection
+const userWarnings = new Map(); // Track warnings per user
+const userMutes = new Map(); // Track active mutes
 let ticketCategoryId = null;
 let autoRoleId = null; // Store the auto-role ID
 
@@ -93,6 +95,31 @@ async function sendLog(title, description, color = 0x0099FF) {
     }
   } catch (err) {
     console.error('Failed to send log:', err);
+  }
+}
+
+// Helper function to handle moderation punishments
+async function sendPunishmentDM(user, punishmentType, reason, duration) {
+  try {
+    const durationText = duration > 0 ? `${duration} דקות` : 'קבוע';
+    const titles = {
+      'warn': '⚠️ אזהרה',
+      'vcmute': '🔇 השתקה בשיחה קולית',
+      'chmute': '🔕 השתקה מערוצים'
+    };
+
+    const dmEmbed = new EmbedBuilder()
+      .setColor(0xFF6B00)
+      .setTitle(titles[punishmentType] || 'עונש')
+      .addFields(
+        { name: 'סיבה', value: reason, inline: false },
+        { name: 'משך הזמן', value: durationText, inline: false }
+      )
+      .setTimestamp();
+
+    await user.send({ embeds: [dmEmbed] });
+  } catch (err) {
+    console.error('Failed to send punishment DM:', err);
   }
 }
 
@@ -152,6 +179,69 @@ client.once(Events.ClientReady, async () => {
         .setName('cleartickets')
         .setDescription('מחק את כל הטיקטים וסדר מחדש את הקטגוריה')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('warn')
+        .setDescription('תן אזהרה לשחקן')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+        .addUserOption(option =>
+          option.setName('user')
+            .setDescription('בחר משתמש')
+            .setRequired(true)
+        )
+        .addIntegerOption(option =>
+          option.setName('duration')
+            .setDescription('משך הזמן בדקות (0 = קבוע)')
+            .setRequired(true)
+            .setMinValue(0)
+        )
+        .addStringOption(option =>
+          option.setName('reason')
+            .setDescription('סיבת האזהרה')
+            .setRequired(true)
+        )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('vcmute')
+        .setDescription('השתק שחקן בשיחה קולית')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+        .addUserOption(option =>
+          option.setName('user')
+            .setDescription('בחר משתמש')
+            .setRequired(true)
+        )
+        .addIntegerOption(option =>
+          option.setName('duration')
+            .setDescription('משך הזמן בדקות (0 = קבוע)')
+            .setRequired(true)
+            .setMinValue(0)
+        )
+        .addStringOption(option =>
+          option.setName('reason')
+            .setDescription('סיבת ההשתקה')
+            .setRequired(true)
+        )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('chmute')
+        .setDescription('השתק שחקן מערוצים')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+        .addUserOption(option =>
+          option.setName('user')
+            .setDescription('בחר משתמש')
+            .setRequired(true)
+        )
+        .addIntegerOption(option =>
+          option.setName('duration')
+            .setDescription('משך הזמן בדקות (0 = קבוע)')
+            .setRequired(true)
+            .setMinValue(0)
+        )
+        .addStringOption(option =>
+          option.setName('reason')
+            .setDescription('סיבת ההשתקה')
+            .setRequired(true)
+        )
         .toJSON()
     ];
 
@@ -513,6 +603,147 @@ client.on(Events.InteractionCreate, async interaction => {
         }
       } catch (err) {
         console.error('Error in cleartickets command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'warn') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+
+        if (!hasStaffRole) {
+          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const targetUser = interaction.options.getUser('user');
+        const duration = interaction.options.getInteger('duration');
+        const reason = interaction.options.getString('reason');
+
+        if (!userWarnings.has(targetUser.id)) {
+          userWarnings.set(targetUser.id, []);
+        }
+
+        userWarnings.get(targetUser.id).push({
+          moderator: interaction.user.id,
+          reason: reason,
+          timestamp: Date.now()
+        });
+
+        await sendPunishmentDM(targetUser, 'warn', reason, duration);
+
+        await sendLog(
+          '⚠️ אזהרה',
+          `**משתמש:** <@${targetUser.id}>\n**סיבה:** ${reason}\n**משך זמן:** ${duration > 0 ? duration + ' דקות' : 'קבוע'}\n**על ידי:** <@${interaction.user.id}>\n**סה"כ אזהרות:** ${userWarnings.get(targetUser.id).length}`,
+          0xFF6B00
+        );
+
+        await interaction.editReply({ content: `✅ אזהרה ניתנה ל-<@${targetUser.id}>! (אזהרה #${userWarnings.get(targetUser.id).length})` });
+      } catch (err) {
+        console.error('Error in warn command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'vcmute') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+
+        if (!hasStaffRole) {
+          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const targetUser = interaction.options.getUser('user');
+        const targetMember = await interaction.guild.members.fetch(targetUser.id);
+        const duration = interaction.options.getInteger('duration');
+        const reason = interaction.options.getString('reason');
+
+        // Apply mute
+        try {
+          await targetMember.voice.setMute(true);
+        } catch (err) {
+          console.error('Failed to mute user in voice:', err);
+        }
+
+        await sendPunishmentDM(targetUser, 'vcmute', reason, duration);
+
+        await sendLog(
+          '🔇 השתקה בשיחה קולית',
+          `**משתמש:** <@${targetUser.id}>\n**סיבה:** ${reason}\n**משך זמן:** ${duration > 0 ? duration + ' דקות' : 'קבוע'}\n**על ידי:** <@${interaction.user.id}>`,
+          0xFF0000
+        );
+
+        // Auto-unmute after duration (if duration > 0)
+        if (duration > 0) {
+          setTimeout(async () => {
+            try {
+              const member = await interaction.guild.members.fetch(targetUser.id);
+              await member.voice.setMute(false);
+              console.log(`Unmuted ${targetUser.id} from voice`);
+
+              await sendLog(
+                '🔊 ביטול השתקה בשיחה קולית',
+                `**משתמש:** <@${targetUser.id}>\n**הסיבה:** פג תוקף המיוט`,
+                0x2ECC71
+              );
+            } catch (err) {
+              console.error('Failed to unmute user:', err);
+            }
+          }, duration * 60 * 1000);
+        }
+
+        await interaction.editReply({ content: `✅ <@${targetUser.id}> הושתק בשיחה קולית!` });
+      } catch (err) {
+        console.error('Error in vcmute command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'chmute') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+
+        if (!hasStaffRole) {
+          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const targetUser = interaction.options.getUser('user');
+        const targetMember = await interaction.guild.members.fetch(targetUser.id);
+        const duration = interaction.options.getInteger('duration');
+        const reason = interaction.options.getString('reason');
+
+        // Apply timeout (Discord's built-in timeout feature)
+        try {
+          await targetMember.timeout(duration > 0 ? duration * 60 * 1000 : null, reason);
+        } catch (err) {
+          console.error('Failed to timeout user:', err);
+        }
+
+        await sendPunishmentDM(targetUser, 'chmute', reason, duration);
+
+        await sendLog(
+          '🔕 השתקה מערוצים',
+          `**משתמש:** <@${targetUser.id}>\n**סיבה:** ${reason}\n**משך זמן:** ${duration > 0 ? duration + ' דקות' : 'קבוע'}\n**על ידי:** <@${interaction.user.id}>`,
+          0xFF0000
+        );
+
+        await interaction.editReply({ content: `✅ <@${targetUser.id}> הושתק מערוצים!` });
+      } catch (err) {
+        console.error('Error in chmute command:', err);
         await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
