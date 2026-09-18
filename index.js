@@ -349,11 +349,6 @@ client.once(Events.ClientReady, async () => {
         .setName('staffappsend')
         .setDescription('שלח את טופס ההגשה לצוות')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .toJSON(),
-      new SlashCommandBuilder()
-        .setName('examsend')
-        .setDescription('שלח את כפתור פתיחת בחינה לצוות')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
 
@@ -467,6 +462,43 @@ client.once(Events.ClientReady, async () => {
     }
   } catch (err) {
     console.error('❌ Failed to send ticket system:', err);
+  }
+
+  // Send exam message automatically
+  try {
+    const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
+    
+    if (examChannel) {
+      const messages = await examChannel.messages.fetch({ limit: 10 });
+      for (const message of messages.values()) {
+        if (message.author.id === client.user.id && message.embeds.some(e => e.title?.includes('בחינות'))) {
+          await message.delete().catch(() => {});
+        }
+      }
+
+      const embedExam = new EmbedBuilder()
+        .setColor(0x9400D3)
+        .setTitle('# בחינות לצוות זמינות!')
+        .setDescription('**תגישו טופס! ואולי תתקבלו!**')
+        .addFields(
+          { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
+          { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
+          { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על ה <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
+        );
+
+      const examMessage = await examChannel.send({
+        embeds: [embedExam]
+      });
+
+      // Add custom emoji reaction - BetterZonestaffapplication
+      await examMessage.react('1522683237825249474').catch((err) => {
+        console.error('Failed to add reaction:', err);
+      });
+
+      console.log('✅ Exam message sent to channel!');
+    }
+  } catch (err) {
+    console.error('❌ Failed to send exam message:', err);
   }
   
   setInterval(() => {
@@ -1003,49 +1035,6 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     if (interaction.commandName === 'examsend') {
-      try {
-        await interaction.deferReply({ ephemeral: true });
-
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
-          return;
-        }
-
-        const embedExam = new EmbedBuilder()
-          .setColor(0x9400D3)
-          .setTitle('# בחינות לצוות זמינות!')
-          .setDescription('**תגישו טופס! ואולי תתקבלו!**')
-          .addFields(
-            { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
-            { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
-            { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על ה <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
-          );
-
-        // Send to staff app channel
-        const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
-        
-        // Delete old exam messages
-        const messages = await examChannel.messages.fetch({ limit: 10 });
-        for (const message of messages.values()) {
-          if (message.author.id === client.user.id && message.embeds.some(e => e.title?.includes('בחינות'))) {
-            await message.delete().catch(() => {});
-          }
-        }
-
-        const examMessage = await examChannel.send({
-          embeds: [embedExam]
-        });
-
-        // Add custom emoji reaction - BetterZonestaffapplication
-        await examMessage.react('1522683237825249474').catch((err) => {
-          console.error('Failed to add reaction:', err);
-        });
-
-        await interaction.editReply({ content: '✅ כפתור הבחינה נשלח בהצלחה!' });
-      } catch (err) {
-        console.error('Error in examsend command:', err);
-        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
-      }
       return;
     }
   }
