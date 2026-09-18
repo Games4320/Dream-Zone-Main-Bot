@@ -1026,8 +1026,8 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const row = new ActionRowBuilder().addComponents(examButton);
 
-        // Send to ticket setup channel
-        const examChannel = await client.channels.fetch(TICKET_SETUP_CHANNEL_ID);
+        // Send to staff app channel
+        const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
         
         // Delete old exam messages
         const messages = await examChannel.messages.fetch({ limit: 10 });
