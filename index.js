@@ -1529,3 +1529,12 @@ client.on(Events.MessageCreate, async message => {
 });
 
 client.login(token);
+
+// Listen on a port for Render health checks
+const PORT = process.env.PORT || 3000;
+require('http').createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is running');
+}).listen(PORT, () => {
+  console.log(`Health check server listening on port ${PORT}`);
+});
