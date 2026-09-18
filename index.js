@@ -1001,7 +1001,12 @@ client.on(Events.GuildMemberRemove, async member => {
   );
   // Age check claim
   if (customId.startsWith('age_check_claim_')) {
-    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    try {
+      await interaction.deferReply({ ephemeral: true });
+    } catch (err) {
+      console.error('Failed to defer:', err);
+      return;
+    }
     
     const messageKey = customId.replace('age_check_claim_', '');
     const claimData = ageCheckClaims.get(messageKey);
