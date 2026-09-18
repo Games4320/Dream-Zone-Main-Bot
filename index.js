@@ -478,12 +478,12 @@ client.once(Events.ClientReady, async () => {
 
       const embedExam = new EmbedBuilder()
         .setColor(0x9400D3)
-        .setTitle('# בחינות לצוות זמינות!')
+        .setTitle('בחינות לצוות זמינות!')
         .setDescription('**תגישו טופס! ואולי תתקבלו!**')
         .addFields(
           { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
           { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
-          { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על ה <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
+          { name: '\u200B', value: 'כדי להתחיל בחינה יש ללחוץ על הכפתור למטה!', inline: false }
         );
 
       const examButton = new ButtonBuilder()
