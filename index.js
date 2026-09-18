@@ -483,14 +483,13 @@ client.once(Events.ClientReady, async () => {
         .addFields(
           { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
           { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
-          { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על הכפתור <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
+          { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על הכפתור למטה!', inline: false }
         );
 
       const examButton = new ButtonBuilder()
         .setCustomId('exam_start')
-        .setLabel('🔵')
-        .setStyle('Secondary')
-        .setEmoji('1522683237825249474');
+        .setLabel('בחינה')
+        .setStyle('Secondary');
 
       const row = new ActionRowBuilder().addComponents(examButton);
 
@@ -1920,14 +1919,6 @@ client.on(Events.InteractionCreate, async interaction => {
     await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     try {
-      const member = await interaction.guild.members.fetch(interaction.user.id);
-      
-      // Check if user has Specialist role
-      if (!member.roles.cache.has(SPECIALIST_ROLE_ID)) {
-        await interaction.editReply({ content: '❌ רק רול Specialist יכול לפתוח בחינה!' });
-        return;
-      }
-
       // Check if user already has an open exam ticket
       const existingTicket = Array.from(openTickets.values()).find(
         ticket => ticket.createdBy === interaction.user.id && ticket.category === 'staff_exam'
@@ -1956,11 +1947,7 @@ client.on(Events.InteractionCreate, async interaction => {
           permissionOverwrites: [
             {
               id: guild.id,
-              deny: ['ViewChannel']
-            },
-            {
-              id: SPECIALIST_ROLE_ID,
-              allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+              deny: []
             }
           ]
         });
@@ -1983,7 +1970,11 @@ client.on(Events.InteractionCreate, async interaction => {
             allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
           },
           {
-            id: SPECIALIST_ROLE_ID,
+            id: staffRoleId,
+            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+          },
+          {
+            id: highStaffRoleId,
             allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
           }
         ]
