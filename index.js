@@ -147,6 +147,11 @@ client.once(Events.ClientReady, async () => {
             .setDescription('בחר רול')
             .setRequired(true)
         )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('cleartickets')
+        .setDescription('מחק את כל הטיקטים וסדר מחדש את הקטגוריה')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
 
@@ -431,6 +436,77 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.editReply({ content: `✅ רול אוטומטי הוגדר ל- <@&${role.id}>! כל משתמש שנכנס יקבל אותו.` });
       } catch (err) {
         console.error('Error in setautoroll command:', err);
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'cleartickets') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
+          return;
+        }
+
+        const guild = interaction.guild;
+        let deletedCount = 0;
+
+        // Delete all ticket channels
+        for (const [channelId, ticketData] of openTickets.entries()) {
+          try {
+            const channel = await guild.channels.fetch(channelId);
+            if (channel) {
+              await channel.delete();
+              deletedCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to delete ticket channel ${channelId}:`, err);
+          }
+        }
+
+        // Delete and recreate the ticket category
+        const oldCategory = await guild.channels.fetch(ticketCategoryId).catch(() => null);
+        if (oldCategory) {
+          try {
+            await oldCategory.delete();
+            console.log('Old ticket category deleted');
+          } catch (err) {
+            console.error('Failed to delete old category:', err);
+          }
+        }
+
+        // Create new category at the top
+        try {
+          const newCategory = await guild.channels.create({
+            name: '【🏷️】open tickets',
+            type: ChannelType.GuildCategory,
+            position: 0, // Set to top
+            permissionOverwrites: [
+              {
+                id: guild.id,
+                deny: [PermissionFlagsBits.ViewChannel],
+              }
+            ]
+          });
+
+          ticketCategoryId = newCategory.id;
+          openTickets.clear();
+
+          await sendLog(
+            '🗑️ מחיקת כל הטיקטים',
+            `**משתמש:** <@${interaction.user.id}>\n**טיקטים שנמחקו:** ${deletedCount}\n**קטגוריה חדשה נוצרה בעמדה הגבוהה ביותר**`,
+            0xFF0000
+          );
+
+          await interaction.editReply({ content: `✅ נמחקו ${deletedCount} טיקטים! הקטגוריה סודרה מחדש בעמדה הגבוהה ביותר.` });
+        } catch (err) {
+          console.error('Failed to create new category:', err);
+          await interaction.editReply({ content: '❌ אירעה שגיאה ביצירת הקטגוריה החדשה.' }).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Error in cleartickets command:', err);
         await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
