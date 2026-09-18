@@ -993,6 +993,64 @@ client.on(Events.InteractionCreate, async interaction => {
     await interaction.reply({ content: `מטופלת את בקשת העזרה מ-<@${claimData.userId}>.`, ephemeral: true });
     return;
   }
+
+  // Age check claim
+  if (customId.startsWith('age_check_claim_')) {
+    try {
+      await interaction.deferReply({ ephemeral: true });
+    } catch (err) {
+      console.error('Failed to defer:', err);
+      return;
+    }
+    
+    const messageKey = customId.replace('age_check_claim_', '');
+    const claimData = ageCheckClaims.get(messageKey);
+
+    if (!claimData) {
+      await interaction.editReply({ content: 'בחינה זו כבר סיימה.' }).catch(() => {});
+      return;
+    }
+
+    if (claimData.claimed) {
+      await interaction.editReply({ content: `בחינה זו כבר טופלה על ידי <@${claimData.claimedBy}>.` }).catch(() => {});
+      return;
+    }
+
+    claimData.claimed = true;
+    claimData.claimedBy = interaction.user.id;
+
+    // Log age check claim
+    await sendLog(
+      '✅ בחינת 16+ טופלה',
+      `**טופלה על ידי:** <@${interaction.user.id}>\n**בחינה של:** <@${claimData.originalUserId}>`,
+      0xFF6B00
+    );
+
+    await interaction.editReply({ content: `✅ בחינה טופלה! ההודעה נמחקה.` }).catch(() => {});
+    
+    // Delete DM in background - delete for all members who received it
+    setTimeout(async () => {
+      for (const [key, data] of ageCheckClaims.entries()) {
+        if (key === messageKey && data.dmMessageId) {
+          try {
+            const member = await interaction.guild.members.fetch(data.memberId);
+            const dmChannel = await member.createDM();
+            const msgs = await dmChannel.messages.fetch({ limit: 20 });
+            for (const msg of msgs.values()) {
+              if (msg.id === data.dmMessageId) {
+                await msg.delete().catch(() => {});
+              }
+            }
+          } catch (err) {
+            console.error('Failed to delete DM:', err);
+          }
+        }
+      }
+      ageCheckClaims.delete(messageKey);
+    }, 500);
+    
+    return;
+  }
 });
 
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
@@ -1054,58 +1112,6 @@ client.on(Events.GuildMemberRemove, async member => {
     `**משתמש:** ${member.user.username} (${member.id})`,
     0xE74C3C
   );
-  // Age check claim
-  if (customId.startsWith('age_check_claim_')) {
-    try {
-      await interaction.deferReply({ ephemeral: true });
-    } catch (err) {
-      console.error('Failed to defer:', err);
-      return;
-    }
-    
-    const messageKey = customId.replace('age_check_claim_', '');
-    const claimData = ageCheckClaims.get(messageKey);
-
-    if (!claimData) {
-      await interaction.editReply({ content: 'בחינה זו כבר סיימה.' }).catch(() => {});
-      return;
-    }
-
-    if (claimData.claimed) {
-      await interaction.editReply({ content: `בחינה זו כבר טופלה על ידי <@${claimData.claimedBy}>.` }).catch(() => {});
-      return;
-    }
-
-    claimData.claimed = true;
-    claimData.claimedBy = interaction.user.id;
-
-    // Log age check claim
-    await sendLog(
-      '✅ בחינת 16+ טופלה',
-      `**טופלה על ידי:** <@${interaction.user.id}>\n**בחינה של:** <@${claimData.originalUserId}>`,
-      0xFF6B00
-    );
-
-    await interaction.editReply({ content: `✅ בחינה טופלה! ההודעה נמחקה.` }).catch(() => {});
-    
-    // Delete DM in background
-    setTimeout(async () => {
-      try {
-        const member = await interaction.guild.members.fetch(claimData.memberId);
-        const dmChannel = await member.createDM();
-        const msgs = await dmChannel.messages.fetch({ limit: 10 });
-        msgs.forEach(msg => {
-          if (msg.id === claimData.dmMessageId) {
-            msg.delete().catch(() => {});
-          }
-        });
-      } catch (err) {
-        console.error('Failed to delete DM:', err);
-      }
-    }, 500);
-    
-    return;
-  }
 });
 
 client.on(Events.VoiceStateUpdate, (oldState, newState) => {
