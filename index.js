@@ -70,6 +70,7 @@ const openTickets = new Map();
 const ageCheckClaims = new Map(); // Track age check claims
 const messageTimestamps = new Map(); // Track messages per user for spam detection
 let ticketCategoryId = null;
+let autoRoleId = null; // Store the auto-role ID
 
 const SPAM_THRESHOLD = 5; // 5 messages
 const SPAM_TIME_WINDOW = 5000; // in 5 seconds
@@ -135,6 +136,16 @@ client.once(Events.ClientReady, async () => {
             .setDescription('כמות ה-XP להסרה')
             .setRequired(true)
             .setMinValue(1)
+        )
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('setautoroll')
+        .setDescription('הגדר רול אוטומטי לכל משתמש שנכנס')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addRoleOption(option =>
+          option.setName('role')
+            .setDescription('בחר רול')
+            .setRequired(true)
         )
         .toJSON()
     ];
@@ -393,6 +404,31 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.reply({ content: `✅ הוסר ${amount} XP מ-<@${user.id}>! XP כללי: ${newXp}`, ephemeral: true });
       } catch (err) {
         console.error('Error in remxp command:', err);
+        await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'setautoroll') {
+      try {
+        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.reply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.', ephemeral: true });
+          return;
+        }
+
+        const role = interaction.options.getRole('role');
+        autoRoleId = role.id;
+
+        // Log auto role set
+        await sendLog(
+          '⚙️ הגדרת רול אוטומטי',
+          `**משתמש שביצע:** <@${interaction.user.id}>\n**רול:** <@&${role.id}>`,
+          0x3498DB
+        );
+
+        await interaction.reply({ content: `✅ רול אוטומטי הוגדר ל- <@&${role.id}>! כל משתמש שנכנס יקבל אותו.`, ephemeral: true });
+      } catch (err) {
+        console.error('Error in setautoroll command:', err);
         await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
       }
       return;
@@ -990,6 +1026,25 @@ client.on(Events.GuildMemberAdd, async member => {
     `**משתמש:** <@${member.id}>\n**שם:** ${member.user.username}`,
     0x2ECC71
   );
+
+  // Auto-role assignment
+  if (autoRoleId) {
+    try {
+      const role = await member.guild.roles.fetch(autoRoleId);
+      if (role) {
+        await member.roles.add(role);
+        console.log(`✅ Assigned auto-role ${role.name} to ${member.user.username}`);
+        
+        await sendLog(
+          '🎯 רול אוטומטי הוקצה',
+          `**משתמש:** <@${member.id}>\n**רול:** <@&${role.id}>`,
+          0x1ABC9C
+        );
+      }
+    } catch (err) {
+      console.error('Failed to assign auto-role:', err);
+    }
+  }
 });
 
 client.on(Events.GuildMemberRemove, async member => {
