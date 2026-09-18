@@ -1,0 +1,14 @@
+{
+  "name": "superme-official-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for SuperME server with help system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "discord.js": "^14.27.0"
+  }
+}
