@@ -1957,7 +1957,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       // Create exam ticket channel
       const ticketChannel = await guild.channels.create({
-        name: `exam-${interaction.user.username}`,
+        name: `exam-${interaction.user.username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`,
         type: ChannelType.GuildText,
         parent: examCategoryId,
         permissionOverwrites: [
@@ -2037,7 +2037,7 @@ client.on(Events.InteractionCreate, async interaction => {
       );
     } catch (err) {
       console.error('Error in exam_start:', err);
-      await interaction.editReply({ content: '❌ אירעה שגיאה בעת פתיחת הבחינה.' });
+      await interaction.editReply({ content: `❌ אירעה שגיאה בעת פתיחת הבחינה: ${err.message}` });
     }
     return;
   }
