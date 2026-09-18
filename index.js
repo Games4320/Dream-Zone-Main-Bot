@@ -22,6 +22,7 @@ const XP_SHOP_CHANNEL_ID = '1550379760792633397';
 const TICKET_SETUP_CHANNEL_ID = '1550240301313032222';
 const VETERAN_CHANNEL_ID = '1541492936724971558';
 const LOGS_CHANNEL_ID = '1541492941795889301';
+const AGE_CHECK_ROLE_ID = '1550414404531654727';
 const COOLDOWN_DURATION = 30 * 1000;
 const XP_PER_MESSAGE = 2;
 const XP_PER_VOICE_MINUTE = 4;
@@ -66,6 +67,7 @@ const userXP = new Map();
 const voiceSessions = new Map();
 const purchasedRoles = new Map();
 const openTickets = new Map();
+const ageCheckClaims = new Map(); // Track age check claims
 const messageTimestamps = new Map(); // Track messages per user for spam detection
 let ticketCategoryId = null;
 
@@ -997,6 +999,53 @@ client.on(Events.GuildMemberRemove, async member => {
     `**משתמש:** ${member.user.username} (${member.id})`,
     0xE74C3C
   );
+  // Age check claim
+  if (customId.startsWith('age_check_claim_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    
+    const messageKey = customId.replace('age_check_claim_', '');
+    const claimData = ageCheckClaims.get(messageKey);
+
+    if (!claimData) {
+      await interaction.editReply({ content: 'בחינה זו כבר סיימה.' }).catch(() => {});
+      return;
+    }
+
+    if (claimData.claimed) {
+      await interaction.editReply({ content: `בחינה זו כבר טופלה על ידי <@${claimData.claimedBy}>.` }).catch(() => {});
+      return;
+    }
+
+    claimData.claimed = true;
+    claimData.claimedBy = interaction.user.id;
+
+    // Log age check claim
+    await sendLog(
+      '✅ בחינת 16+ טופלה',
+      `**טופלה על ידי:** <@${interaction.user.id}>\n**בחינה של:** <@${claimData.originalUserId}>`,
+      0xFF6B00
+    );
+
+    await interaction.editReply({ content: `✅ בחינה טופלה! ההודעה נמחקה.` }).catch(() => {});
+    
+    // Delete DM in background
+    setTimeout(async () => {
+      try {
+        const member = await interaction.guild.members.fetch(claimData.memberId);
+        const dmChannel = await member.createDM();
+        const msgs = await dmChannel.messages.fetch({ limit: 10 });
+        msgs.forEach(msg => {
+          if (msg.id === claimData.dmMessageId) {
+            msg.delete().catch(() => {});
+          }
+        });
+      } catch (err) {
+        console.error('Failed to delete DM:', err);
+      }
+    }, 500);
+    
+    return;
+  }
 });
 
 client.on(Events.VoiceStateUpdate, (oldState, newState) => {
@@ -1399,6 +1448,77 @@ client.on(Events.MessageCreate, async message => {
     } catch (err) {
       console.error('Failed to check veteran status:', err);
       message.reply('❌ אירעה שגיאה בעת בדיקת הסטטוס.');
+    }
+  }
+
+  // Age check command
+  if (message.content.startsWith('!16')) {
+    try {
+      const guild = message.guild;
+      const roleToCheck = await guild.roles.fetch(AGE_CHECK_ROLE_ID).catch(() => null);
+      
+      if (!roleToCheck) {
+        return message.reply('❌ לא מצאתי את הרול הנדרש.');
+      }
+
+      // Get all members with the role
+      const members = await guild.members.fetch();
+      const membersWithRole = members.filter(m => m.roles.cache.has(AGE_CHECK_ROLE_ID));
+
+      if (membersWithRole.size === 0) {
+        return message.reply('❌ אין מישהו עם הרול הזה.');
+      }
+
+      // Send DM to each member with the role
+      let sent = 0;
+      for (const member of membersWithRole.values()) {
+        try {
+          const embed = new EmbedBuilder()
+            .setColor(0xFF6B00)
+            .setTitle('# בחינת 16+ חדשה!')
+            .addFields(
+              { name: 'משתמש', value: `${message.author}`, inline: false }
+            );
+
+          const claimButton = new ButtonBuilder()
+            .setCustomId(`age_check_claim_${message.id}`)
+            .setLabel('Claim')
+            .setStyle('Success');
+
+          const row = new ActionRowBuilder().addComponents(claimButton);
+
+          const dmMsg = await member.send({ embeds: [embed], components: [row] });
+          
+          // Store the claim data
+          ageCheckClaims.set(message.id, {
+            originalUserId: message.author.id,
+            dmMessageId: dmMsg.id,
+            memberId: member.id,
+            claimed: false,
+            claimedBy: null
+          });
+
+          sent++;
+        } catch (err) {
+          console.error(`Failed to send DM to ${member.user.tag}:`, err);
+        }
+      }
+
+      // Log age check
+      await sendLog(
+        '✅ בחינת 16+ חדשה',
+        `**משתמש שביצע:** <@${userId}>\n**הודעות נשלחו ל:** ${sent} חברים`,
+        0xFF6B00
+      );
+
+      message.reply(`✅ בחינה נשלחה ל-${sent} משתמשים עם הרול!`).then(msg => {
+        setTimeout(() => msg.delete().catch(() => {}), 5000);
+      });
+    } catch (err) {
+      console.error('Failed to execute age check:', err);
+      message.reply('❌ אירעה שגיאה בעת ביצוע הפקודה.').then(msg => {
+        setTimeout(() => msg.delete().catch(() => {}), 5000);
+      });
     }
   }
 });
