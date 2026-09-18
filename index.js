@@ -463,6 +463,46 @@ client.once(Events.ClientReady, async () => {
   } catch (err) {
     console.error('❌ Failed to send ticket system:', err);
   }
+
+  // Send exam message automatically
+  try {
+    const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
+    
+    if (examChannel) {
+      const messages = await examChannel.messages.fetch({ limit: 10 });
+      for (const message of messages.values()) {
+        if (message.author.id === client.user.id && message.embeds.some(e => e.title?.includes('בחינות'))) {
+          await message.delete().catch(() => {});
+        }
+      }
+
+      const embedExam = new EmbedBuilder()
+        .setColor(0x9400D3)
+        .setTitle('# בחינות לצוות זמינות!')
+        .setDescription('**תגישו טופס! ואולי תתקבלו!**')
+        .addFields(
+          { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
+          { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
+          { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על ה <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
+        );
+
+      const examButton = new ButtonBuilder()
+        .setCustomId('exam_start')
+        .setStyle('Secondary')
+        .setEmoji('1522683237825249474');
+
+      const row = new ActionRowBuilder().addComponents(examButton);
+
+      await examChannel.send({
+        embeds: [embedExam],
+        components: [row]
+      });
+
+      console.log('✅ Exam message sent to channel!');
+    }
+  } catch (err) {
+    console.error('❌ Failed to send exam message:', err);
+  }
   
   setInterval(() => {
     const now = Date.now();
@@ -982,12 +1022,7 @@ client.on(Events.InteractionCreate, async interaction => {
           .setLabel('🔵 התחל בחינה')
           .setStyle('Primary');
 
-        const examButton = new ButtonBuilder()
-          .setCustomId('exam_start')
-          .setStyle('Secondary')
-          .setEmoji('1522683237825249474');
-
-        const row = new ActionRowBuilder().addComponents(appButton, examButton);
+        const row = new ActionRowBuilder().addComponents(appButton);
 
         await channel.send({
           embeds: [embed],
