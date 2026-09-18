@@ -1937,10 +1937,11 @@ client.on(Events.InteractionCreate, async interaction => {
       let examCategoryId = null;
       
       let examCategory = guild.channels.cache.find(c => 
-        c.isCategory() && c.name.toLowerCase().includes('בחינה')
+        c.type === ChannelType.GuildCategory && c.name.toLowerCase().includes('בחינה')
       );
 
       if (!examCategory) {
+        console.log('Creating new exam category...');
         examCategory = await guild.channels.create({
           name: '🧪 בחינות לצוות',
           type: ChannelType.GuildCategory,
@@ -1951,6 +1952,9 @@ client.on(Events.InteractionCreate, async interaction => {
             }
           ]
         });
+        console.log('✅ Exam category created:', examCategory.id);
+      } else {
+        console.log('✅ Found existing exam category:', examCategory.id);
       }
 
       examCategoryId = examCategory.id;
