@@ -453,6 +453,18 @@ client.on(Events.InteractionCreate, async interaction => {
       const username = member.user.username;
       const categoryLabel = category.label;
 
+      // Check if user already has an open ticket
+      let userHasOpenTicket = false;
+      for (const [channelId, ticketData] of openTickets.entries()) {
+        if (ticketData.userId === userId) {
+          userHasOpenTicket = true;
+          await interaction.reply({ content: `❌ אתה כבר יש לך טיקט פתוח! <#${channelId}>`, ephemeral: true });
+          break;
+        }
+      }
+
+      if (userHasOpenTicket) return;
+
       const ticketName = `${categoryLabel}-${username}`;
 
       try {
