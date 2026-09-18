@@ -288,8 +288,10 @@ client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'xpshopsend') {
       try {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.', ephemeral: true });
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -338,19 +340,21 @@ client.on(Events.InteractionCreate, async interaction => {
           );
 
           await shopChannel.send({ embeds: [embed], components: [buyButtonRow, refundButtonRow] });
-          await interaction.reply({ content: '✅ ה-XP shop נשלח בהצלחה!', ephemeral: true });
+          await interaction.editReply({ content: '✅ ה-XP shop נשלח בהצלחה!' });
         }
       } catch (err) {
         console.error('Error in xpshopsend command:', err);
-        await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
     }
 
     if (interaction.commandName === 'addxp') {
       try {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.', ephemeral: true });
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -358,7 +362,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const amount = interaction.options.getInteger('amount');
 
         if (amount <= 0) {
-          await interaction.reply({ content: 'הכמות חייבת להיות חיובית.', ephemeral: true });
+          await interaction.editReply({ content: 'הכמות חייבת להיות חיובית.' });
           return;
         }
 
@@ -372,18 +376,20 @@ client.on(Events.InteractionCreate, async interaction => {
           0x2ECC71
         );
 
-        await interaction.reply({ content: `✅ נוסף ${amount} XP ל-<@${user.id}>! XP כללי: ${currentXp + amount}`, ephemeral: true });
+        await interaction.editReply({ content: `✅ נוסף ${amount} XP ל-<@${user.id}>! XP כללי: ${currentXp + amount}` });
       } catch (err) {
         console.error('Error in addxp command:', err);
-        await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
     }
 
     if (interaction.commandName === 'remxp') {
       try {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
         if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.', ephemeral: true });
+          await interaction.editReply({ content: 'רק אדמינים יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -391,7 +397,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const amount = interaction.options.getInteger('amount');
 
         if (amount <= 0) {
-          await interaction.reply({ content: 'הכמות חייבת להיות חיובית.', ephemeral: true });
+          await interaction.editReply({ content: 'הכמות חייבת להיות חיובית.' });
           return;
         }
 
@@ -406,10 +412,10 @@ client.on(Events.InteractionCreate, async interaction => {
           0xE74C3C
         );
 
-        await interaction.reply({ content: `✅ הוסר ${amount} XP מ-<@${user.id}>! XP כללי: ${newXp}`, ephemeral: true });
+        await interaction.editReply({ content: `✅ הוסר ${amount} XP מ-<@${user.id}>! XP כללי: ${newXp}` });
       } catch (err) {
         console.error('Error in remxp command:', err);
-        await interaction.reply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.', ephemeral: true });
+        await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
       }
       return;
     }
@@ -515,11 +521,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (interaction.isStringSelectMenu()) {
     if (interaction.customId === 'ticket_category_select') {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
       const categoryId = interaction.values[0];
       const category = TICKET_CATEGORIES.find(c => c.id === categoryId);
       
       if (!category) {
-        await interaction.reply({ content: 'קטגוריה לא קיימת.', ephemeral: true });
+        await interaction.editReply({ content: 'קטגוריה לא קיימת.' });
         return;
       }
 
@@ -534,7 +542,7 @@ client.on(Events.InteractionCreate, async interaction => {
       for (const [channelId, ticketData] of openTickets.entries()) {
         if (ticketData.userId === userId) {
           userHasOpenTicket = true;
-          await interaction.reply({ content: `❌ אתה כבר יש לך טיקט פתוח! <#${channelId}>`, ephemeral: true });
+          await interaction.editReply({ content: `❌ אתה כבר יש לך טיקט פתוח! <#${channelId}>` });
           break;
         }
       }
@@ -619,7 +627,7 @@ client.on(Events.InteractionCreate, async interaction => {
           category: categoryId
         });
 
-        await interaction.reply({ content: `✅ טיקט נוצר בהצלחה! <#${ticketChannel.id}>`, ephemeral: true });
+        await interaction.editReply({ content: `✅ טיקט נוצר בהצלחה! <#${ticketChannel.id}>` });
         
         // Log ticket creation
         await sendLog(
@@ -629,35 +637,37 @@ client.on(Events.InteractionCreate, async interaction => {
         );
       } catch (err) {
         console.error('Failed to create ticket:', err);
-        await interaction.reply({ content: '❌ אירעה שגיאה ביצירת הטיקט.', ephemeral: true });
+        await interaction.editReply({ content: '❌ אירעה שגיאה ביצירת הטיקט.' }).catch(() => {});
       }
       return;
     }
 
     if (customId === 'shop_buy_menu') {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
       const roleId = interaction.values[0];
       const userId = interaction.user.id;
       const member = await interaction.guild.members.fetch(userId).catch(() => null);
       
       if (!member) {
-        await interaction.reply({ content: 'לא הצלחתי למצוא אותך בשרת.', ephemeral: true });
+        await interaction.editReply({ content: 'לא הצלחתי למצוא אותך בשרת.' });
         return;
       }
 
       const roleConfig = SHOP_ROLES.find(r => r.roleId === roleId);
       if (!roleConfig) {
-        await interaction.reply({ content: 'הרול הזה לא קיים בחנות.', ephemeral: true });
+        await interaction.editReply({ content: 'הרול הזה לא קיים בחנות.' });
         return;
       }
 
       const userXpAmount = userXP.get(userId) || 0;
       if (userXpAmount < roleConfig.cost) {
-        await interaction.reply({ content: `❌ אין לך מספיק אקספי! אתה צריך ${roleConfig.cost} אקספי וברשותך ${userXpAmount}.`, ephemeral: true });
+        await interaction.editReply({ content: `❌ אין לך מספיק אקספי! אתה צריך ${roleConfig.cost} אקספי וברשותך ${userXpAmount}.` });
         return;
       }
 
       if (member.roles.cache.has(roleId)) {
-        await interaction.reply({ content: '❌ אתה כבר בעלים של הרול הזה!', ephemeral: true });
+        await interaction.editReply({ content: '❌ אתה כבר בעלים של הרול הזה!' });
         return;
       }
 
@@ -670,32 +680,34 @@ client.on(Events.InteractionCreate, async interaction => {
         }
         purchasedRoles.get(userId).add(roleId);
 
-        await interaction.reply({ content: `✅ קנית בהצלחה את הרול <@&${roleId}>! הוחסרו ${roleConfig.cost} אקספי. XP שנותר: ${userXpAmount - roleConfig.cost}`, ephemeral: true });
+        await interaction.editReply({ content: `✅ קנית בהצלחה את הרול <@&${roleId}>! הוחסרו ${roleConfig.cost} אקספי. XP שנותר: ${userXpAmount - roleConfig.cost}` });
       } catch (err) {
         console.error('Failed to purchase role:', err);
-        await interaction.reply({ content: '❌ אירעה שגיאה בעת קנייה של הרול.', ephemeral: true });
+        await interaction.editReply({ content: '❌ אירעה שגיאה בעת קנייה של הרול.' }).catch(() => {});
       }
       return;
     }
 
     if (customId === 'shop_refund_menu') {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
       const roleId = interaction.values[0];
       const userId = interaction.user.id;
       const member = await interaction.guild.members.fetch(userId).catch(() => null);
       
       if (!member) {
-        await interaction.reply({ content: 'לא הצלחתי למצוא אותך בשרת.', ephemeral: true });
+        await interaction.editReply({ content: 'לא הצלחתי למצוא אותך בשרת.' });
         return;
       }
 
       const roleConfig = SHOP_ROLES.find(r => r.roleId === roleId);
       if (!roleConfig) {
-        await interaction.reply({ content: 'הרול הזה לא קיים בחנות.', ephemeral: true });
+        await interaction.editReply({ content: 'הרול הזה לא קיים בחנות.' });
         return;
       }
 
       if (!member.roles.cache.has(roleId)) {
-        await interaction.reply({ content: '❌ אתה לא בעלים של הרול הזה!', ephemeral: true });
+        await interaction.editReply({ content: '❌ אתה לא בעלים של הרול הזה!' });
         return;
       }
 
@@ -709,10 +721,10 @@ client.on(Events.InteractionCreate, async interaction => {
           purchasedRoles.get(userId).delete(roleId);
         }
 
-        await interaction.reply({ content: `✅ החזרת בהצלחה את הרול <@&${roleId}>! קיבלת חזרה ${roleConfig.cost} אקספי. XP כללי: ${userXpAmount + roleConfig.cost}`, ephemeral: true });
+        await interaction.editReply({ content: `✅ החזרת בהצלחה את הרול <@&${roleId}>! קיבלת חזרה ${roleConfig.cost} אקספי. XP כללי: ${userXpAmount + roleConfig.cost}` });
       } catch (err) {
         console.error('Failed to refund role:', err);
-        await interaction.reply({ content: '❌ אירעה שגיאה בעת החזרת הרול.', ephemeral: true });
+        await interaction.editReply({ content: '❌ אירעה שגיאה בעת החזרת הרול.' }).catch(() => {});
       }
       return;
     }
@@ -724,11 +736,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
   // Ticket buttons
   if (customId.startsWith('ticket_claim_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_claim_', '');
     const ticketData = openTickets.get(channelId);
 
     if (!ticketData) {
-      await interaction.reply({ content: 'הטיקט לא קיים עוד.', ephemeral: true });
+      await interaction.editReply({ content: 'הטיקט לא קיים עוד.' });
       return;
     }
 
@@ -737,12 +751,12 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
 
     if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.reply({ content: 'רק Staff ו High Staff יכולים ללחוץ על כפתור זה!', ephemeral: true });
+      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים ללחוץ על כפתור זה!' });
       return;
     }
 
     if (ticketData.claimed) {
-      await interaction.reply({ content: `הטיקט כבר נטויל על ידי <@${ticketData.claimedBy}>.`, ephemeral: true });
+      await interaction.editReply({ content: `הטיקט כבר נטויל על ידי <@${ticketData.claimedBy}>.` });
       return;
     }
 
@@ -784,7 +798,7 @@ client.on(Events.InteractionCreate, async interaction => {
       }
     }
 
-    await interaction.reply({ content: `✅ טיקט נטויל בהצלחה!`, ephemeral: true });
+    await interaction.editReply({ content: `✅ טיקט נטויל בהצלחה!` });
     
     // Log ticket claim
     await sendLog(
@@ -796,6 +810,8 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   if (customId.startsWith('ticket_add_user_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_add_user_', '');
     const member = await interaction.guild.members.fetch(interaction.user.id);
     
@@ -803,7 +819,7 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
 
     if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.reply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!', ephemeral: true });
+      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!' });
       return;
     }
     
@@ -825,6 +841,8 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   if (customId.startsWith('ticket_remove_user_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_remove_user_', '');
     const member = await interaction.guild.members.fetch(interaction.user.id);
     
@@ -832,7 +850,7 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
 
     if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.reply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!', ephemeral: true });
+      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!' });
       return;
     }
     
@@ -854,6 +872,8 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   if (customId.startsWith('ticket_close_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_close_', '');
     const channel = client.channels.cache.get(channelId);
     const member = await interaction.guild.members.fetch(interaction.user.id);
@@ -862,12 +882,12 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
 
     if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.reply({ content: 'רק Staff ו High Staff יכולים לסגור טיקט!', ephemeral: true });
+      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לסגור טיקט!' });
       return;
     }
 
     try {
-      await interaction.reply({ content: '✅ טיקט נסגר בהצלחה! הערוץ יימחק בעוד 5 שניות...', ephemeral: true });
+      await interaction.editReply({ content: '✅ טיקט נסגר בהצלחה! הערוץ יימחק בעוד 5 שניות...' });
       
       setTimeout(async () => {
         try {
@@ -890,19 +910,21 @@ client.on(Events.InteractionCreate, async interaction => {
       }, 5000);
     } catch (err) {
       console.error('Failed to close ticket:', err);
-      await interaction.reply({ content: '❌ אירעה שגיאה בעת סגירת הטיקט.', ephemeral: true });
+      await interaction.editReply({ content: '❌ אירעה שגיאה בעת סגירת הטיקט.' }).catch(() => {});
     }
     return;
   }
 
   // Modal submissions for tickets
   if (customId.startsWith('ticket_add_modal_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_add_modal_', '');
     const userInput = interaction.fields.getTextInputValue('user_input');
     const channel = client.channels.cache.get(channelId);
 
     if (!channel) {
-      await interaction.reply({ content: '❌ הערוץ לא קיים.', ephemeral: true });
+      await interaction.editReply({ content: '❌ הערוץ לא קיים.' });
       return;
     }
 
@@ -920,7 +942,7 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       if (!member) {
-        await interaction.reply({ content: '❌ לא מצאתי את המשתמש הזה.', ephemeral: true });
+        await interaction.editReply({ content: '❌ לא מצאתי את המשתמש הזה.' });
         return;
       }
 
@@ -935,10 +957,10 @@ client.on(Events.InteractionCreate, async interaction => {
         ticketData.participants.push(member.id);
       }
 
-      await interaction.reply({ content: `✅ <@${member.id}> נוסף לטיקט בהצלחה!`, ephemeral: true });
+      await interaction.editReply({ content: `✅ <@${member.id}> נוסף לטיקט בהצלחה!` });
     } catch (err) {
       console.error('Failed to add user:', err);
-      await interaction.reply({ content: '❌ אירעה שגיאה בהוספת המשתמש.', ephemeral: true });
+      await interaction.editReply({ content: '❌ אירעה שגיאה בהוספת המשתמש.' }).catch(() => {});
     }
     
     // Log user added to ticket
@@ -951,12 +973,14 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   if (customId.startsWith('ticket_remove_modal_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const channelId = customId.replace('ticket_remove_modal_', '');
     const userInput = interaction.fields.getTextInputValue('user_input');
     const channel = client.channels.cache.get(channelId);
 
     if (!channel) {
-      await interaction.reply({ content: '❌ הערוץ לא קיים.', ephemeral: true });
+      await interaction.editReply({ content: '❌ הערוץ לא קיים.' });
       return;
     }
 
@@ -974,7 +998,7 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       if (!member) {
-        await interaction.reply({ content: '❌ לא מצאתי את המשתמש הזה.', ephemeral: true });
+        await interaction.editReply({ content: '❌ לא מצאתי את המשתמש הזה.' });
         return;
       }
 
@@ -985,10 +1009,10 @@ client.on(Events.InteractionCreate, async interaction => {
         ticketData.participants = ticketData.participants.filter(id => id !== member.id);
       }
 
-      await interaction.reply({ content: `✅ <@${member.id}> הוסר מהטיקט בהצלחה!`, ephemeral: true });
+      await interaction.editReply({ content: `✅ <@${member.id}> הוסר מהטיקט בהצלחה!` });
     } catch (err) {
       console.error('Failed to remove user:', err);
-      await interaction.reply({ content: '❌ אירעה שגיאה בהסרת המשתמש.', ephemeral: true });
+      await interaction.editReply({ content: '❌ אירעה שגיאה בהסרת המשתמש.' }).catch(() => {});
     }
     
     // Log user removed from ticket
@@ -1002,6 +1026,8 @@ client.on(Events.InteractionCreate, async interaction => {
 
   // Shop button interactions
   if (customId === 'shop_open_buy') {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const buyMenu = new StringSelectMenuBuilder()
       .setCustomId('shop_buy_menu')
       .setPlaceholder('בחר רול לקנייה...')
@@ -1014,11 +1040,13 @@ client.on(Events.InteractionCreate, async interaction => {
       );
 
     const row = new ActionRowBuilder().addComponents(buyMenu);
-    await interaction.reply({ components: [row], ephemeral: true });
+    await interaction.editReply({ components: [row] });
     return;
   }
 
   if (customId === 'shop_open_refund') {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const refundMenu = new StringSelectMenuBuilder()
       .setCustomId('shop_refund_menu')
       .setPlaceholder('בחר רול להחזרה...')
@@ -1031,17 +1059,19 @@ client.on(Events.InteractionCreate, async interaction => {
       );
 
     const row = new ActionRowBuilder().addComponents(refundMenu);
-    await interaction.reply({ components: [row], ephemeral: true });
+    await interaction.editReply({ components: [row] });
     return;
   }
 
   // Help system
   if (customId.startsWith('help_claim_')) {
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+
     const messageKey = customId.replace('help_claim_', '');
     const claimData = helpClaims.get(messageKey);
 
     if (!claimData) {
-      await interaction.reply({ content: 'תבנית המساعדה הזו כבר איננה פעילה.', ephemeral: true });
+      await interaction.editReply({ content: 'תבנית המساعדה הזו כבר איננה פעילה.' });
       return;
     }
 
@@ -1050,12 +1080,12 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
 
     if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.reply({ content: 'אין לך גישה מתאימה.', ephemeral: true });
+      await interaction.editReply({ content: 'אין לך גישה מתאימה.' });
       return;
     }
 
     if (claimData.claimed) {
-      await interaction.reply({ content: `בקשה זו כבר מטופלת על ידי <@${claimData.claimedBy}>.`, ephemeral: true });
+      await interaction.editReply({ content: `בקשה זו כבר מטופלת על ידי <@${claimData.claimedBy}>.` });
       return;
     }
 
@@ -1080,14 +1110,14 @@ client.on(Events.InteractionCreate, async interaction => {
       }
     }
 
-    await interaction.reply({ content: `מטופלת את בקשת העזרה מ-<@${claimData.userId}>.`, ephemeral: true });
+    await interaction.editReply({ content: `מטופלת את בקשת העזרה מ-<@${claimData.userId}>.` });
     return;
   }
 
   // Age check claim
   if (customId.startsWith('age_check_claim_')) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
     } catch (err) {
       console.error('Failed to defer:', err);
       return;
