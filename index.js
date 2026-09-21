@@ -389,21 +389,18 @@ client.once(Events.ClientReady, async () => {
         inline: false
       });
 
-      const buyButtonRow = new ActionRowBuilder().addComponents(
+      const buttonsRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('shop_open_buy')
           .setLabel('Open Store')
-          .setStyle('Primary')
-      );
-
-      const refundButtonRow = new ActionRowBuilder().addComponents(
+          .setStyle('Primary'),
         new ButtonBuilder()
           .setCustomId('shop_open_refund')
           .setLabel('Return Roles')
           .setStyle('Secondary')
       );
 
-      await shopChannel.send({ embeds: [embed], components: [buyButtonRow, refundButtonRow] });
+      await shopChannel.send({ embeds: [embed], components: [buttonsRow] });
       console.log('✅ XP shop sent to channel!');
     }
   } catch (err) {
@@ -562,21 +559,18 @@ client.on(Events.InteractionCreate, async interaction => {
             inline: false
           });
 
-          const buyButtonRow = new ActionRowBuilder().addComponents(
+          const buttonsRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId('shop_open_buy')
               .setLabel('Open Store')
-              .setStyle('Primary')
-          );
-
-          const refundButtonRow = new ActionRowBuilder().addComponents(
+              .setStyle('Primary'),
             new ButtonBuilder()
               .setCustomId('shop_open_refund')
               .setLabel('Return Roles')
               .setStyle('Secondary')
           );
 
-          await shopChannel.send({ embeds: [embed], components: [buyButtonRow, refundButtonRow] });
+          await shopChannel.send({ embeds: [embed], components: [buttonsRow] });
           await interaction.editReply({ content: '✅ ה-XP shop נשלח בהצלחה!' });
         }
       } catch (err) {
