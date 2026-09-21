@@ -44,11 +44,11 @@ const TICKET_CATEGORIES = [
 ];
 
 const SHOP_ROLES = [
-  { roleId: '1541492934258720935', cost: 30000, emoji: '🏆' },
-  { roleId: '1541492934258720936', cost: 25000, emoji: '🔔' },
-  { roleId: '1541492934258720937', cost: 20000, emoji: '💰' },
-  { roleId: '1541492934258720938', cost: 18000, emoji: '🌊' },
-  { roleId: '1541492934258720939', cost: 5000, emoji: '💡' }
+  { roleId: '1541492934258720935', cost: 10000 },
+  { roleId: '1541492934258720936', cost: 15000 },
+  { roleId: '1541492934258720937', cost: 20000 },
+  { roleId: '1541492934258720938', cost: 25000 },
+  { roleId: '1541492934258720939', cost: 30000 }
 ];
 
 const client = new Client({
@@ -371,16 +371,16 @@ client.once(Events.ClientReady, async () => {
 
       const embed = new EmbedBuilder()
         .setColor(0xFF6B00)
-        .setTitle('🇺🇸 LegendZone - XP Store');
+        .setTitle('# Superme Xp shop');
 
-      let shopText = '';
+      let shopText = '**תבחרו את הרול שבא לכם, ותקנו אותו!**\n\n';
       for (let i = 0; i < SHOP_ROLES.length; i++) {
         const roleConfig = SHOP_ROLES[i];
+        const roleId = roleConfig.roleId;
         const cost = roleConfig.cost;
-        const emoji = roleConfig.emoji;
-        shopText += `**${i + 1}. @**${emoji} **- ${cost.toLocaleString()} XP**\n`;
+        shopText += `${i + 1}. <@&${roleId}> - ${cost} XP\n`;
       }
-      shopText += '\n▼ click on the button to buy a role.\n\n---\n\nבמידה ויש בעיה בחנות, אתם מוזמנים לפתוח טיקט ב\n# 🎫 tickets';
+      shopText += '\n▼ click on the button to buy a role.';
       embed.setDescription(shopText);
 
       embed.addFields({
@@ -544,16 +544,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
           const embed = new EmbedBuilder()
             .setColor(0xFF6B00)
-            .setTitle('🇺🇸 LegendZone - XP Store');
+            .setTitle('# Superme Xp shop');
 
-          let shopText = '';
+          let shopText = '**תבחרו את הרול שבא לכם, ותקנו אותו!**\n\n';
           for (let i = 0; i < SHOP_ROLES.length; i++) {
             const roleConfig = SHOP_ROLES[i];
+            const roleId = roleConfig.roleId;
             const cost = roleConfig.cost;
-            const emoji = roleConfig.emoji;
-            shopText += `**${i + 1}. @**${emoji} **- ${cost.toLocaleString()} XP**\n`;
+            shopText += `${i + 1}. <@&${roleId}> - ${cost} XP\n`;
           }
-          shopText += '\n▼ click on the button to buy a role.\n\n---\n\nבמידה ויש בעיה בחנות, אתם מוזמנים לפתוח טיקט ב\n# 🎫 tickets';
+          shopText += '\n▼ click on the button to buy a role.';
           embed.setDescription(shopText);
 
           embed.addFields({
