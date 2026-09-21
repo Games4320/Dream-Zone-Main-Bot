@@ -544,7 +544,7 @@ client.once(Events.ClientReady, async () => {
 
       const examButton = new ButtonBuilder()
         .setCustomId('staffapp_start')
-        .setEmoji('staffapplication')
+        .setLabel('📋')
         .setStyle('Primary');
 
       console.log('🔘 Button created successfully');
@@ -1131,7 +1131,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
           const examButton = new ButtonBuilder()
             .setCustomId('staffapp_start')
-            .setEmoji('staffapplication')
+            .setLabel('📋')
             .setStyle('Primary');
 
           console.log('🔘 Button created successfully');
@@ -1235,7 +1235,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const appButton = new ButtonBuilder()
           .setCustomId('staffapp_start')
-          .setEmoji('staffapplication')
+          .setLabel('📋')
           .setStyle('Primary');
 
         const row = new ActionRowBuilder().addComponents(appButton);
