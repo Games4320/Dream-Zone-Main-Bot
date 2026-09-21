@@ -468,30 +468,76 @@ client.once(Events.ClientReady, async () => {
     if (examChannel) {
       const messages = await examChannel.messages.fetch({ limit: 10 });
       for (const message of messages.values()) {
-        if (message.author.id === client.user.id && message.embeds.some(e => e.title?.includes('בחינות'))) {
+        if (message.author.id === client.user.id) {
           await message.delete().catch(() => {});
         }
       }
 
-      const embedExam = new EmbedBuilder()
-        .setColor(0x9400D3)
-        .setTitle('בחינות לצוות זמינות!')
-        .setDescription('**תגישו טופס! ואולי תתקבלו!**')
-        .addFields(
-          { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
-          { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
-          { name: '\u200B', value: 'כדי להתחיל בחינה יש ללחוץ על הכפתור למטה!', inline: false }
-        );
+      const messageText = `# <a:Space_graduationcap:1550120090328899654>    | **Dream Zone - Staff Applications**
+
+**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Zone !**
+
+**אם אתם חושבים שיש לכם אחריות, בגרות ורצון לעזור לקהילה זה המקום שלכם להוכיח את זה.**
+
+**כאן תוכלו להגיש מועמדות ולהתחיל את תהליך הקבלה לצוות השרת.**
+
+**חשוב לדעת :**
+
+**החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
+
+## <a:Space_Link:1549756666986242078>   | **Dream Zone - How It Works**
+
+- **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
+
+      **בתוך הטיקט תקבלו טופס עם מספר שאלות שעליכם לענות עליהן בצורה רצינית ומפורטת.**
+
+- **2 ) לאחר שליחת הטופס, צוות הבוחנים יעבור על התשובות שלכם.**
+
+      **אם תעברו את השלב הראשון, תוזמנו לשיחה קצרה עם אחד הבוחנים כחלק מהמשך התהליך.**
+
+- **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
+
+##  <a:Space_Link:1549756666986242078>    | **Dream Zone - Staff Requirements**
+
+\`\`\`
+
+• גיל 13 ומעלה.
+
+• חובה להפעיל אימות דו שלבי (2FA).
+
+• רצינות, בגרות והתנהלות מכבדת.
+
+• מילוי מלא של טופס המועמדות.
+
+• רצון להשקיע ולעזור לקהילה לאורך זמן.
+
+\`\`\`
+
+## <a:Space_Link:1549756666986242078>   | **Dream Zone - Before You Apply**
+
+- **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
+
+- **אין לתייג בוחנים או אנשי צוות בנוגע לתוצאות.**
+
+- **מועמד שלא יהיה זמין לאורך זמן עלול להיפסל.**
+
+- **תשובות מושקעות ומפורטות מעולות את סיכויי הקבלה שלכם.**
+
+- **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
+
+# <a:Space_Fire:1550122698045263882>  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Zone**
+
+**<a:Space_point_down:1549404772275322933>  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
       const examButton = new ButtonBuilder()
-        .setCustomId('exam_start')
-        .setStyle('Secondary')
-        .setEmoji('1522683237825249474');
+        .setCustomId('staffapp_start')
+        .setLabel('🔵 התחל בחינה')
+        .setStyle('Primary');
 
       const row = new ActionRowBuilder().addComponents(examButton);
 
       await examChannel.send({
-        embeds: [embedExam],
+        content: messageText,
         components: [row]
       });
 
@@ -1004,15 +1050,61 @@ client.on(Events.InteractionCreate, async interaction => {
           }
         }
 
-        const embed = new EmbedBuilder()
-          .setColor(0xFF6B00)
-          .setTitle('# טפסים לצוות זמינים!')
-          .setDescription('**תגישו טופס! ואולי תתקבלו!**')
-          .addFields(
-            { name: '****תנאי קבלה:****', value: '`1. בגרות ואחראיות מלאה`\n\n`2. גיל 13+`\n\n`3. להיות אחד שבאמת רוצה לקדם את השרת.`', inline: false },
-            { name: '\u200B', value: 'אזזז למה אתם מחכים? תתחילו בחינה!', inline: false },
-            { name: '\u200B', value: '-# כדי להתחיל בחינה יש ללחוץ על ה <:BetterZonestaffapplication:1522683237825249474> למטה!', inline: false }
-          );
+        const messageText = `# <a:Space_graduationcap:1550120090328899654>    | **Dream Zone - Staff Applications**
+
+**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Zone !**
+
+**אם אתם חושבים שיש לכם אחריות, בגרות ורצון לעזור לקהילה זה המקום שלכם להוכיח את זה.**
+
+**כאן תוכלו להגיש מועמדות ולהתחיל את תהליך הקבלה לצוות השרת.**
+
+**חשוב לדעת :**
+
+**החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
+
+## <a:Space_Link:1549756666986242078>   | **Dream Zone - How It Works**
+
+- **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
+
+      **בתוך הטיקט תקבלו טופס עם מספר שאלות שעליכם לענות עליהן בצורה רצינית ומפורטת.**
+
+- **2 ) לאחר שליחת הטופס, צוות הבוחנים יעבור על התשובות שלכם.**
+
+      **אם תעברו את השלב הראשון, תוזמנו לשיחה קצרה עם אחד הבוחנים כחלק מהמשך התהליך.**
+
+- **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
+
+##  <a:Space_Link:1549756666986242078>    | **Dream Zone - Staff Requirements**
+
+\`\`\`
+
+• גיל 13 ומעלה.
+
+• חובה להפעיל אימות דו שלבי (2FA).
+
+• רצינות, בגרות והתנהלות מכבדת.
+
+• מילוי מלא של טופס המועמדות.
+
+• רצון להשקיע ולעזור לקהילה לאורך זמן.
+
+\`\`\`
+
+## <a:Space_Link:1549756666986242078>   | **Dream Zone - Before You Apply**
+
+- **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
+
+- **אין לתייג בוחנים או אנשי צוות בנוגע לתוצאות.**
+
+- **מועמד שלא יהיה זמין לאורך זמן עלול להיפסל.**
+
+- **תשובות מושקעות ומפורטות מעולות את סיכויי הקבלה שלכם.**
+
+- **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
+
+# <a:Space_Fire:1550122698045263882>  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Zone**
+
+**<a:Space_point_down:1549404772275322933>  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
         const appButton = new ButtonBuilder()
           .setCustomId('staffapp_start')
@@ -1022,7 +1114,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const row = new ActionRowBuilder().addComponents(appButton);
 
         await channel.send({
-          embeds: [embed],
+          content: messageText,
           components: [row]
         });
 
