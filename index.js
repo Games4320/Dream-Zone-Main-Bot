@@ -481,9 +481,9 @@ client.once(Events.ClientReady, async () => {
 
       console.log('📝 Sending new staff application message...');
 
-      const messageText = `# 🎓    | **Dream Zone - Staff Applications**
+      const messageText = `# :Space_graduationcap:    | **Dream Space - Staff Applications**
 
-**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Zone !**
+**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Space !**
 
 **אם אתם חושבים שיש לכם אחריות, בגרות ורצון לעזור לקהילה זה המקום שלכם להוכיח את זה.**
 
@@ -493,7 +493,7 @@ client.once(Events.ClientReady, async () => {
 
 **החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
 
-## 🔗   | **Dream Zone - How It Works**
+## :Space_Link:   | **Dream Space - How It Works**
 
 - **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
 
@@ -505,7 +505,7 @@ client.once(Events.ClientReady, async () => {
 
 - **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
 
-##  🔗    | **Dream Zone - Staff Requirements**
+##  :Space_Link:    | **Dream Space - Staff Requirements**
 
 \`\`\`
 
@@ -521,7 +521,7 @@ client.once(Events.ClientReady, async () => {
 
 \`\`\`
 
-## 🔗   | **Dream Zone - Before You Apply**
+## :Space_Link:   | **Dream Space - Before You Apply**
 
 - **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
 
@@ -533,13 +533,13 @@ client.once(Events.ClientReady, async () => {
 
 - **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
 
-# 🔥  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Zone**
+# :Space_Fire:  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
 
-**👇  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
       const examButton = new ButtonBuilder()
         .setCustomId('staffapp_start')
-        .setLabel('📋 התחל בחינה')
+        .setEmoji('staffapplication')
         .setStyle('Primary');
 
       console.log('🔘 Button created successfully');
@@ -1065,9 +1065,9 @@ client.on(Events.InteractionCreate, async interaction => {
           }
         }
 
-        const messageText = `# 🎓    | **Dream Zone - Staff Applications**
+        const messageText = `# :Space_graduationcap:    | **Dream Space - Staff Applications**
 
-**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Zone !**
+**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Space !**
 
 **אם אתם חושבים שיש לכם אחריות, בגרות ורצון לעזור לקהילה זה המקום שלכם להוכיח את זה.**
 
@@ -1077,7 +1077,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 **החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
 
-## 🔗   | **Dream Zone - How It Works**
+## :Space_Link:   | **Dream Space - How It Works**
 
 - **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
 
@@ -1089,7 +1089,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
 
-##  🔗    | **Dream Zone - Staff Requirements**
+##  :Space_Link:    | **Dream Space - Staff Requirements**
 
 \`\`\`
 
@@ -1105,7 +1105,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 \`\`\`
 
-## 🔗   | **Dream Zone - Before You Apply**
+## :Space_Link:   | **Dream Space - Before You Apply**
 
 - **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
 
@@ -1117,13 +1117,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
 
-# 🔥  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Zone**
+# :Space_Fire:  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
 
-**👇  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
         const appButton = new ButtonBuilder()
           .setCustomId('staffapp_start')
-          .setLabel('📋 התחל בחינה')
+          .setEmoji('staffapplication')
           .setStyle('Primary');
 
         const row = new ActionRowBuilder().addComponents(appButton);
