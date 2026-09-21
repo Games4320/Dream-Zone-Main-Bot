@@ -349,6 +349,11 @@ client.once(Events.ClientReady, async () => {
         .setName('staffappsend')
         .setDescription('שלח את טופס ההגשה לצוות')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('forcestaffsend')
+        .setDescription('שלח בכוח את הודעת הבחינה')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
 
@@ -1042,6 +1047,113 @@ client.on(Events.InteractionCreate, async interaction => {
       } catch (err) {
         console.error('Error in endgiveaway command:', err);
         await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'forcestaffsend') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+        console.log('🔄 Force sending staff application message...');
+        
+        const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
+        console.log('📍 Found exam channel:', examChannel ? examChannel.name : 'NOT FOUND');
+        
+        if (examChannel) {
+          console.log('🗑️ Fetching old messages to delete...');
+          const messages = await examChannel.messages.fetch({ limit: 10 });
+          let deletedCount = 0;
+          for (const message of messages.values()) {
+            if (message.author.id === client.user.id && (message.content?.includes('Staff Applications') || message.embeds.some(e => e.title?.includes('בחינות')))) {
+              await message.delete().catch(() => {});
+              deletedCount++;
+            }
+          }
+          console.log(`🗑️ Deleted ${deletedCount} old staff app messages`);
+
+          console.log('📝 Sending new staff application message...');
+
+          const messageText = `# :Space_graduationcap:     | **Dream Space - Staff Applications**
+
+**אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Legend Zone !**
+
+**אם אתם חושבים שיש לכם אחריות, בגרות ורצון לעזור לקהילה זה המקום שלכם להוכיח את זה.**
+
+**כאן תוכלו להגיש מועמדות ולהתחיל את תהליך הקבלה לצוות השרת.**
+
+**חשוב לדעת :**
+
+**החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
+
+## :Space_Link:   | **Dream Space - How It Works**
+
+- **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
+
+      **בתוך הטיקט תקבלו טופס עם מספר שאלות שעליכם לענות עליהן בצורה רצינית ומפורטת.**
+
+- **2 ) לאחר שליחת הטופס, צוות הבוחנים יעבור על התשובות שלכם.**
+
+      **אם תעברו את השלב הראשון, תוזמנו לשיחה קצרה עם אחד הבוחנים כחלק מהמשך התהליך.**
+
+- **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
+
+##  :Space_Link:    | **Dream Space - Staff Requirements**
+
+\`\`\`
+
+• גיל 13 ומעלה.
+
+• חובה להפעיל אימות דו שלבי (2FA).
+
+• רצינות, בגרות והתנהלות מכבדת.
+
+• מילוי מלא של טופס המועמדות.
+
+• רצון להשקיע ולעזור לקהילה לאורך זמן.
+
+\`\`\`
+
+## :Space_Link:    | **Dream Space - Before You Apply**
+
+- **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
+
+- **אין לתייג בוחנים או אנשי צוות בנוגע לתוצאות.**
+
+- **מועמד שלא יהיה זמין לאורך זמן עלול להיפסל.**
+
+- **תשובות מושקעות ומפורטות מעולות את סיכויי הקבלה שלכם.**
+
+- **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
+
+# :Space_Fire:   **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
+
+**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+
+          const examButton = new ButtonBuilder()
+            .setCustomId('staffapp_start')
+            .setEmoji('staffapplication')
+            .setStyle('Primary');
+
+          console.log('🔘 Button created successfully');
+          
+          const row = new ActionRowBuilder().addComponents(examButton);
+          
+          console.log('📦 ActionRow created, attempting to send message...');
+
+          await examChannel.send({
+            content: messageText,
+            components: [row]
+          });
+
+          console.log('✅ Staff application message sent successfully!');
+          await interaction.editReply({ content: '✅ הודעת הבחינה נשלחה בהצלחה!' });
+        } else {
+          console.log('❌ Could not find staff app channel with ID:', STAFF_APP_CHANNEL_ID);
+          await interaction.editReply({ content: '❌ לא נמצא חדר הבחינות!' });
+        }
+      } catch (err) {
+        console.error('❌ Failed to send staff app message:', err);
+        await interaction.editReply({ content: `❌ שגיאה בשליחת ההודעה: ${err.message}` });
       }
       return;
     }
