@@ -354,6 +354,11 @@ client.once(Events.ClientReady, async () => {
         .setName('forcestaffsend')
         .setDescription('שלח בכוח את הודעת הבחינה')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .toJSON(),
+      new SlashCommandBuilder()
+        .setName('testchannel')
+        .setDescription('בדוק שליחה לחדר הבחינות')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .toJSON()
     ];
 
@@ -1047,6 +1052,32 @@ client.on(Events.InteractionCreate, async interaction => {
       } catch (err) {
         console.error('Error in endgiveaway command:', err);
         await interaction.editReply({ content: 'אירעה שגיאה בעת ביצוע הפקודה.' }).catch(() => {});
+      }
+      return;
+    }
+
+    if (interaction.commandName === 'testchannel') {
+      try {
+        await interaction.deferReply({ ephemeral: true });
+        console.log('🔍 Testing channel access...');
+        
+        const channelId = '1550858076666470500';
+        console.log('📋 Trying to access channel:', channelId);
+        
+        const channel = await client.channels.fetch(channelId);
+        console.log('📍 Channel found:', channel ? channel.name : 'NOT FOUND');
+        console.log('📍 Channel type:', channel ? channel.type : 'NO TYPE');
+        console.log('📍 Can send messages:', channel ? channel.permissionsFor(client.user).has('SendMessages') : 'NO PERMISSIONS');
+        
+        if (channel) {
+          await channel.send('🧪 בדיקה! הודעה זו נשלחה כדי לבדוק שהבוט יכול לשלוח הודעות לחדר הזה.');
+          await interaction.editReply({ content: `✅ הודעת בדיקה נשלחה לחדר ${channel.name}!` });
+        } else {
+          await interaction.editReply({ content: '❌ לא הצלחתי לגשת לחדר!' });
+        }
+      } catch (err) {
+        console.error('❌ Test failed:', err);
+        await interaction.editReply({ content: `❌ שגיאה: ${err.message}` });
       }
       return;
     }
