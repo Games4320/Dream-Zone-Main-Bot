@@ -486,7 +486,7 @@ client.once(Events.ClientReady, async () => {
 
       console.log('📝 Sending new staff application message...');
 
-      const messageText = `# :Space_graduationcap:    | **Dream Space - Staff Applications**
+      const messageText = `# <:Space_graduationcap:1550120090328899654>    | **Dream Space - Staff Applications**
 
 **אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Space !**
 
@@ -498,7 +498,7 @@ client.once(Events.ClientReady, async () => {
 
 **החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
 
-## :Space_Link:   | **Dream Space - How It Works**
+## <:Space_Link:1549756666986242078>   | **Dream Space - How It Works**
 
 - **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
 
@@ -510,7 +510,7 @@ client.once(Events.ClientReady, async () => {
 
 - **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
 
-##  :Space_Link:    | **Dream Space - Staff Requirements**
+##  <:Space_Link:1549756666986242078>    | **Dream Space - Staff Requirements**
 
 \`\`\`
 
@@ -526,7 +526,7 @@ client.once(Events.ClientReady, async () => {
 
 \`\`\`
 
-## :Space_Link:   | **Dream Space - Before You Apply**
+## <:Space_Link:1549756666986242078>   | **Dream Space - Before You Apply**
 
 - **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
 
@@ -538,13 +538,13 @@ client.once(Events.ClientReady, async () => {
 
 - **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
 
-# :Space_Fire:  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
+# <:Space_Fire:1550122698045263882>  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
 
-**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+**<:Space_point_down:1549404772275322933>  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
       const examButton = new ButtonBuilder()
         .setCustomId('staffapp_start')
-        .setLabel('📋')
+        .setEmoji('staffapp')
         .setStyle('Primary');
 
       console.log('🔘 Button created successfully');
@@ -1073,7 +1073,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
           console.log('📝 Sending new staff application message...');
 
-          const messageText = `# :Space_graduationcap:     | **Dream Space - Staff Applications**
+          const messageText = `# <:Space_graduationcap:1550120090328899654>     | **Dream Space - Staff Applications**
 
 **אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Legend Zone !**
 
@@ -1085,7 +1085,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 **החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
 
-## :Space_Link:   | **Dream Space - How It Works**
+## <<:Space_Link:1549756666986242078>1549756666986242078>   | **Dream Space - How It Works**
 
 - **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
 
@@ -1097,7 +1097,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
 
-##  :Space_Link:    | **Dream Space - Staff Requirements**
+##  <<:Space_Link:1549756666986242078>1549756666986242078>    | **Dream Space - Staff Requirements**
 
 \`\`\`
 
@@ -1113,7 +1113,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 \`\`\`
 
-## :Space_Link:    | **Dream Space - Before You Apply**
+## <<:Space_Link:1549756666986242078>1549756666986242078>    | **Dream Space - Before You Apply**
 
 - **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
 
@@ -1125,13 +1125,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
 
-# :Space_Fire:   **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
+# <<:Space_Fire:1550122698045263882>1550122698045263882>   **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
 
-**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+**<<:Space_point_down:1549404772275322933>1549404772275322933>  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
           const examButton = new ButtonBuilder()
             .setCustomId('staffapp_start')
-            .setLabel('📋')
+            .setEmoji('staffapp')
             .setStyle('Primary');
 
           console.log('🔘 Button created successfully');
@@ -1177,7 +1177,7 @@ client.on(Events.InteractionCreate, async interaction => {
           }
         }
 
-        const messageText = `# :Space_graduationcap:    | **Dream Space - Staff Applications**
+        const messageText = `# <:Space_graduationcap:1550120090328899654>    | **Dream Space - Staff Applications**
 
 **אהלן לכולם וברוכים הבאים לחדר המועמדויות לצוות של Dream Space !**
 
@@ -1189,7 +1189,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 **החדר מיועד לבחינות צוות בלבד, אין לפתוח טיקט למטרות אחרות.**
 
-## :Space_Link:   | **Dream Space - How It Works**
+## <:Space_Link:1549756666986242078>   | **Dream Space - How It Works**
 
 - **1 ) לוחצים על הכפתור שמתחת להודעה ונפתח עבורכם טיקט אישי.**
 
@@ -1201,7 +1201,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **3 ) מועמדים שיעברו את שני השלבים יקבלו הסבר קצר על מערכת הצוות, הנהלים וההתנהלות בשרת.**
 
-##  :Space_Link:    | **Dream Space - Staff Requirements**
+##  <:Space_Link:1549756666986242078>    | **Dream Space - Staff Requirements**
 
 \`\`\`
 
@@ -1217,7 +1217,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 \`\`\`
 
-## :Space_Link:   | **Dream Space - Before You Apply**
+## <:Space_Link:1549756666986242078>   | **Dream Space - Before You Apply**
 
 - **אין לזלזל בתהליך או להטריל במהלך הבחינה.**
 
@@ -1229,13 +1229,13 @@ client.on(Events.InteractionCreate, async interaction => {
 
 - **כל ניסיון להעתיק תשובות או לשתף את הטופס יוביל לפסילה.**
 
-# :Space_Fire:  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
+# <:Space_Fire:1550122698045263882>  **מאחלים בהצלחה לכל הנבחנים - הנהלת Dream Space**
 
-**:Space_point_down:  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
+**<:Space_point_down:1549404772275322933>  כדי להתחיל בחינה לחצו על הכפתור למטה**`;
 
         const appButton = new ButtonBuilder()
           .setCustomId('staffapp_start')
-          .setLabel('📋')
+          .setEmoji('staffapp')
           .setStyle('Primary');
 
         const row = new ActionRowBuilder().addComponents(appButton);
