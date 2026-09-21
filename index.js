@@ -16,14 +16,14 @@ if (process.env.TOKEN) {
   highStaffRoleId = config.highStaffRoleId;
 }
 
-const HELP_CHANNEL_ID = '1550239568551485530';
-const XP_CHECK_CHANNEL_ID = '1550377572158804088';
-const XP_SHOP_CHANNEL_ID = '1550456007015010427';
-const TICKET_SETUP_CHANNEL_ID = '1549855124237590690';
-const VETERAN_CHANNEL_ID = '1541492936724971558';
-const LOGS_CHANNEL_ID = '1541492941795889301';
-const AGE_CHECK_ROLE_ID = '1550414404531654727';
-const STAFF_APP_CHANNEL_ID = '1550459563730276453';
+const HELP_CHANNEL_ID = '1551153176185413714';
+const XP_CHECK_CHANNEL_ID = '1551153639266066442';
+const XP_SHOP_CHANNEL_ID = '1551153578608042044';
+const TICKET_SETUP_CHANNEL_ID = '1551153597193130014';
+const VETERAN_CHANNEL_ID = '1551153176185413714';
+const LOGS_CHANNEL_ID = '1551154180377419838';
+const AGE_CHECK_ROLE_ID = '1551153489751842836';
+const STAFF_APP_CHANNEL_ID = '1551153612649009224';
 const COOLDOWN_DURATION = 30 * 1000;
 const XP_PER_MESSAGE = 2;
 const XP_PER_VOICE_MINUTE = 4;
@@ -2434,13 +2434,9 @@ client.on(Events.MessageCreate, async message => {
     }
 
     try {
-      const embed = new EmbedBuilder()
-        .setColor(0xFF6B00)
-        .setTitle('בקשת עזרה חדשה')
-        .addFields(
-          { name: 'סיבה:', value: reason, inline: true },
-          { name: 'שיחה:', value: voiceChannelLink, inline: true }
-        );
+      const voiceInfo = message.member.voice.channel 
+        ? `https://discord.com/channels/${message.guildId}/${message.member.voice.channelId}`
+        : '🔔 המשתמש אינו נמצא בשיחה';
 
       const claimButton = new ButtonBuilder()
         .setCustomId(`help_claim_${message.id}`)
@@ -2450,8 +2446,7 @@ client.on(Events.MessageCreate, async message => {
       const row = new ActionRowBuilder().addComponents(claimButton);
 
       const helpMsg = await message.channel.send({
-        embeds: [embed],
-        content: `<@&${staffRoleId}> <@&${highStaffRoleId}> <@${userId}>`,
+        content: `<@&${staffRoleId}>, <@&${highStaffRoleId}>, <@${userId}>\nאת עזרתכם!\n\n${voiceInfo}\n**סיבה:** \`${reason}\``,
         components: [row],
         allowedMentions: { parse: ['roles', 'users'] }
       });
