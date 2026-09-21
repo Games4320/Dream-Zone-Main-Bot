@@ -2456,7 +2456,7 @@ client.on(Events.MessageCreate, async message => {
       const row = new ActionRowBuilder().addComponents(claimButton);
 
       const helpMsg = await message.channel.send({
-        content: `<@&${staffRoleId}>, <@&${highStaffRoleId}>, <@${userId}>\nאת עזרתכם!\n\n${voiceInfo}\n**סיבה:** \`${reason}\``,
+        content: `<@&${staffRoleId}>, <@&${highStaffRoleId}>, <@${userId}>\nצריך את עזרתכם!\n\n${voiceInfo}\n**סיבה:** \`${reason}\``,
         components: [row],
         allowedMentions: { parse: ['roles', 'users'] }
       });
