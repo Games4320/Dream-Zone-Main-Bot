@@ -16,22 +16,22 @@ if (process.env.TOKEN) {
   highStaffRoleId = config.highStaffRoleId;
 }
 
-const HELP_CHANNEL_ID = '1551153176185413714';
-const XP_CHECK_CHANNEL_ID = '1551153639266066442';
-const XP_SHOP_CHANNEL_ID = '1551153578608042044';
-const TICKET_SETUP_CHANNEL_ID = '1551153597193130014';
-const VETERAN_CHANNEL_ID = '1551153176185413714';
+const HELP_CHANNEL_ID = '1550858093997330453';
+const XP_CHECK_CHANNEL_ID = '1551586828077764668';
+const XP_SHOP_CHANNEL_ID = '1550858080022040586';
+const TICKET_SETUP_CHANNEL_ID = '1551587050053050491';
+const VETERAN_CHANNEL_ID = '1550858108232798249';
 const LOGS_CHANNEL_ID = '1551154180377419838';
-const AGE_CHECK_ROLE_ID = '1551153489751842836';
-const STAFF_APP_CHANNEL_ID = '1551153612649009224';
+const AGE_CHECK_ROLE_ID = '1550857624181014621';
+const STAFF_APP_CHANNEL_ID = '1550858076666470500';
 const COOLDOWN_DURATION = 30 * 1000;
 const XP_PER_MESSAGE = 2;
 const XP_PER_VOICE_MINUTE = 4;
 const VOICE_XP_INTERVAL = 60000;
 const VETERAN_DAYS = 85;
 
-const MANAGEMENT_ROLE_ID = '1541492934405398528';
-const SPECIALIST_ROLE_ID = '1541492934376165400';
+const MANAGEMENT_ROLE_ID = '1550857521533816903';
+const SPECIALIST_ROLE_ID = '1551587680964583444';
 
 // Ticket categories
 const TICKET_CATEGORIES = [
@@ -44,11 +44,11 @@ const TICKET_CATEGORIES = [
 ];
 
 const SHOP_ROLES = [
-  { roleId: '1541492934258720935', cost: 10000 },
-  { roleId: '1541492934258720936', cost: 15000 },
-  { roleId: '1541492934258720937', cost: 20000 },
-  { roleId: '1541492934258720938', cost: 25000 },
-  { roleId: '1541492934258720939', cost: 30000 }
+  { roleId: '1541492934258720935', cost: 30000, emoji: '🏆' },
+  { roleId: '1541492934258720936', cost: 25000, emoji: '🔔' },
+  { roleId: '1541492934258720937', cost: 20000, emoji: '💰' },
+  { roleId: '1541492934258720938', cost: 18000, emoji: '🌊' },
+  { roleId: '1541492934258720939', cost: 5000, emoji: '💡' }
 ];
 
 const client = new Client({
@@ -371,14 +371,15 @@ client.once(Events.ClientReady, async () => {
 
       const embed = new EmbedBuilder()
         .setColor(0xFF6B00)
-        .setTitle('# Superme Xp shop');
+        .setTitle('🏪 LegendZone - XP Store');
 
-      let shopText = '**תבחרו את הרול שבא לכם, ותקנו אותו!**\n\n';
+      let shopText = '';
       for (let i = 0; i < SHOP_ROLES.length; i++) {
         const roleConfig = SHOP_ROLES[i];
         const roleId = roleConfig.roleId;
         const cost = roleConfig.cost;
-        shopText += `${i + 1}. <@&${roleId}> - ${cost} XP\n`;
+        const emoji = roleConfig.emoji;
+        shopText += `**${i + 1}.** @${emoji} - ${cost.toLocaleString()} XP\n`;
       }
       shopText += '\n▼ click on the button to buy a role.';
       embed.setDescription(shopText);
@@ -544,14 +545,15 @@ client.on(Events.InteractionCreate, async interaction => {
 
           const embed = new EmbedBuilder()
             .setColor(0xFF6B00)
-            .setTitle('# Superme Xp shop');
+            .setTitle('🏪 LegendZone - XP Store');
 
-          let shopText = '**תבחרו את הרול שבא לכם, ותקנו אותו!**\n\n';
+          let shopText = '';
           for (let i = 0; i < SHOP_ROLES.length; i++) {
             const roleConfig = SHOP_ROLES[i];
             const roleId = roleConfig.roleId;
             const cost = roleConfig.cost;
-            shopText += `${i + 1}. <@&${roleId}> - ${cost} XP\n`;
+            const emoji = roleConfig.emoji;
+            shopText += `**${i + 1}.** @${emoji} - ${cost.toLocaleString()} XP\n`;
           }
           shopText += '\n▼ click on the button to buy a role.';
           embed.setDescription(shopText);
