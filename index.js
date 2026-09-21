@@ -1276,7 +1276,6 @@ client.on(Events.InteractionCreate, async interaction => {
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
     const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
     if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
       await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים ללחוץ על כפתור זה!' });
