@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: superme-discord-bot
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TOKEN
+        sync: false
+      - key: staffRoleId
+        sync: false
+      - key: highStaffRoleId
+        sync: false

@@ -1,13 +1,17 @@
 {
-  "name": "superme-official-bot",
+  "name": "dream-zone-main-bot",
   "version": "1.0.0",
-  "description": "Discord bot for SuperME server with help system",
+  "description": "Discord bot for Dream Zone server with advanced features",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
-  "keywords": [],
+  "keywords": ["discord", "bot", "nodejs"],
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "discord.js": "^14.27.0"
   }
