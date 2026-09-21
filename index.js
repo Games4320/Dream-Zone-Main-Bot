@@ -371,17 +371,16 @@ client.once(Events.ClientReady, async () => {
 
       const embed = new EmbedBuilder()
         .setColor(0xFF6B00)
-        .setTitle('🏪 LegendZone - XP Store');
+        .setTitle('🇺🇸 LegendZone - XP Store');
 
       let shopText = '';
       for (let i = 0; i < SHOP_ROLES.length; i++) {
         const roleConfig = SHOP_ROLES[i];
-        const roleId = roleConfig.roleId;
         const cost = roleConfig.cost;
         const emoji = roleConfig.emoji;
-        shopText += `**${i + 1}.** @${emoji} - ${cost.toLocaleString()} XP\n`;
+        shopText += `**${i + 1}. @**${emoji} **- ${cost.toLocaleString()} XP**\n`;
       }
-      shopText += '\n▼ click on the button to buy a role.';
+      shopText += '\n▼ click on the button to buy a role.\n\n---\n\nבמידה ויש בעיה בחנות, אתם מוזמנים לפתוח טיקט ב\n# 🎫 tickets';
       embed.setDescription(shopText);
 
       embed.addFields({
@@ -545,17 +544,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
           const embed = new EmbedBuilder()
             .setColor(0xFF6B00)
-            .setTitle('🏪 LegendZone - XP Store');
+            .setTitle('🇺🇸 LegendZone - XP Store');
 
           let shopText = '';
           for (let i = 0; i < SHOP_ROLES.length; i++) {
             const roleConfig = SHOP_ROLES[i];
-            const roleId = roleConfig.roleId;
             const cost = roleConfig.cost;
             const emoji = roleConfig.emoji;
-            shopText += `**${i + 1}.** @${emoji} - ${cost.toLocaleString()} XP\n`;
+            shopText += `**${i + 1}. @**${emoji} **- ${cost.toLocaleString()} XP**\n`;
           }
-          shopText += '\n▼ click on the button to buy a role.';
+          shopText += '\n▼ click on the button to buy a role.\n\n---\n\nבמידה ויש בעיה בחנות, אתם מוזמנים לפתוח טיקט ב\n# 🎫 tickets';
           embed.setDescription(shopText);
 
           embed.addFields({
