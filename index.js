@@ -462,16 +462,24 @@ client.once(Events.ClientReady, async () => {
   }
 
   // Send exam message automatically
+  console.log('🔄 Attempting to send staff application message...');
   try {
     const examChannel = await client.channels.fetch(STAFF_APP_CHANNEL_ID);
+    console.log('📍 Found exam channel:', examChannel ? examChannel.name : 'NOT FOUND');
     
     if (examChannel) {
+      console.log('🗑️ Fetching old messages to delete...');
       const messages = await examChannel.messages.fetch({ limit: 10 });
+      let deletedCount = 0;
       for (const message of messages.values()) {
         if (message.author.id === client.user.id && (message.content?.includes('Staff Applications') || message.embeds.some(e => e.title?.includes('בחינות')))) {
           await message.delete().catch(() => {});
+          deletedCount++;
         }
       }
+      console.log(`🗑️ Deleted ${deletedCount} old staff app messages`);
+
+      console.log('📝 Sending new staff application message...');
 
       const messageText = `# 🎓    | **Dream Zone - Staff Applications**
 
@@ -534,19 +542,24 @@ client.once(Events.ClientReady, async () => {
         .setEmoji('staffapplication')
         .setStyle('Primary');
 
+      console.log('🔘 Button created successfully');
+      
       const row = new ActionRowBuilder().addComponents(examButton);
+      
+      console.log('📦 ActionRow created, attempting to send message...');
 
       await examChannel.send({
         content: messageText,
         components: [row]
       });
 
-      console.log('✅ Exam message sent to channel!');
+      console.log('✅ Staff application message sent successfully!');
     } else {
       console.log('❌ Could not find staff app channel with ID:', STAFF_APP_CHANNEL_ID);
     }
   } catch (err) {
     console.error('❌ Failed to send exam message:', err);
+    console.error('❌ Error details:', err.message);
   }
   
   setInterval(() => {
