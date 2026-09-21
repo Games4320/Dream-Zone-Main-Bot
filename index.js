@@ -761,9 +761,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const member = await interaction.guild.members.fetch(interaction.user.id);
         const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-        if (!hasStaffRole) {
-          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+        if (!hasStaffRole && !isAdmin) {
+          await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -803,9 +804,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const member = await interaction.guild.members.fetch(interaction.user.id);
         const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-        if (!hasStaffRole) {
-          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+        if (!hasStaffRole && !isAdmin) {
+          await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -862,9 +864,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const member = await interaction.guild.members.fetch(interaction.user.id);
         const hasStaffRole = member.roles.cache.has(staffRoleId) || member.roles.cache.has(highStaffRoleId);
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-        if (!hasStaffRole) {
-          await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בפקודה הזו.' });
+        if (!hasStaffRole && !isAdmin) {
+          await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים להשתמש בפקודה הזו.' });
           return;
         }
 
@@ -1272,9 +1275,11 @@ client.on(Events.InteractionCreate, async interaction => {
     const member = await interaction.guild.members.fetch(interaction.user.id);
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים ללחוץ על כפתור זה!' });
+    if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+      await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים ללחוץ על כפתור זה!' });
       return;
     }
 
@@ -1404,9 +1409,10 @@ client.on(Events.InteractionCreate, async interaction => {
     
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!' });
+    if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+      await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים להשתמש בכפתור הזה!' });
       return;
     }
     
@@ -1435,9 +1441,10 @@ client.on(Events.InteractionCreate, async interaction => {
     
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים להשתמש בכפתור הזה!' });
+    if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+      await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים להשתמש בכפתור הזה!' });
       return;
     }
     
@@ -1467,9 +1474,10 @@ client.on(Events.InteractionCreate, async interaction => {
     
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
-      await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לסגור טיקט!' });
+    if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+      await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים לסגור טיקט!' });
       return;
     }
 
@@ -1792,9 +1800,10 @@ client.on(Events.InteractionCreate, async interaction => {
       // Only staff and high staff can approve
       const hasStaffRole = member.roles.cache.has(staffRoleId);
       const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+      const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-      if (!hasStaffRole && !hasHighStaffRole) {
-        await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לאשר בקשות!' });
+      if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+        await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים לאשר בקשות!' });
         return;
       }
 
@@ -1868,9 +1877,10 @@ client.on(Events.InteractionCreate, async interaction => {
       // Only staff and high staff can reject
       const hasStaffRole = member.roles.cache.has(staffRoleId);
       const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+      const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-      if (!hasStaffRole && !hasHighStaffRole) {
-        await interaction.editReply({ content: 'רק Staff ו High Staff יכולים לדחות בקשות!' });
+      if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
+        await interaction.editReply({ content: 'רק Staff, High Staff או Administrator יכולים לדחות בקשות!' });
         return;
       }
 
@@ -2111,8 +2121,9 @@ client.on(Events.InteractionCreate, async interaction => {
     const member = await interaction.guild.members.fetch(interaction.user.id);
     const hasStaffRole = member.roles.cache.has(staffRoleId);
     const hasHighStaffRole = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!hasStaffRole && !hasHighStaffRole) {
+    if (!hasStaffRole && !hasHighStaffRole && !isAdmin) {
       await interaction.editReply({ content: 'אין לך גישה מתאימה.' });
       return;
     }
@@ -2549,8 +2560,9 @@ client.on(Events.MessageCreate, async message => {
   if (message.content.startsWith('!clear')) {
     const member = await message.guild.members.fetch(message.author.id);
     const isHighStaff = member.roles.cache.has(highStaffRoleId);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (!isHighStaff) {
+    if (!isHighStaff && !isAdmin) {
       await sendLog(
         '🚫 ניסיון כניסה לא מורשה',
         `**משתמש:** <@${userId}>\n**פקודה:** !clear\n**ערוץ:** <#${message.channelId}>\n**סיבה:** אין הרשאות`,
