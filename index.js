@@ -468,7 +468,7 @@ client.once(Events.ClientReady, async () => {
     if (examChannel) {
       const messages = await examChannel.messages.fetch({ limit: 10 });
       for (const message of messages.values()) {
-        if (message.author.id === client.user.id) {
+        if (message.author.id === client.user.id && (message.content?.includes('Staff Applications') || message.embeds.some(e => e.title?.includes('בחינות')))) {
           await message.delete().catch(() => {});
         }
       }
@@ -542,6 +542,8 @@ client.once(Events.ClientReady, async () => {
       });
 
       console.log('✅ Exam message sent to channel!');
+    } else {
+      console.log('❌ Could not find staff app channel with ID:', STAFF_APP_CHANNEL_ID);
     }
   } catch (err) {
     console.error('❌ Failed to send exam message:', err);
