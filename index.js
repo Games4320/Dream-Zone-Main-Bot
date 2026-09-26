@@ -23,7 +23,7 @@ const TICKET_SETUP_CHANNEL_ID = '1551587050053050491';
 const VETERAN_CHANNEL_ID = '1550858108232798249';
 const LOGS_CHANNEL_ID = '1551154180377419838';
 const AGE_CHECK_ROLE_ID = '1550857624181014621';
-const STAFF_APP_CHANNEL_ID = '1550858076666470500';
+const STAFF_APP_CHANNEL_ID = '1551911781444747290';
 const COOLDOWN_DURATION = 30 * 1000;
 const XP_PER_MESSAGE = 2;
 const XP_PER_VOICE_MINUTE = 4;
@@ -549,7 +549,7 @@ client.once(Events.ClientReady, async () => {
 
       const examButton = new ButtonBuilder()
         .setCustomId('staffapp_start')
-        .setEmoji('staffapp')
+        .setLabel('📋 בחינה')
         .setStyle('Primary');
 
       console.log('🔘 Button created successfully');
@@ -1266,7 +1266,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         const appButton = new ButtonBuilder()
           .setCustomId('staffapp_start')
-          .setEmoji('staffapp')
+          .setLabel('📋 בחינה')
           .setStyle('Primary');
 
         const row = new ActionRowBuilder().addComponents(appButton);
